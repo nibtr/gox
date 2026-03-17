@@ -1,11 +1,11 @@
 # goitr
 
-goitr is a simple interpreter for educational purposes, mainly
+goitr is a simple tree-walk interpreter for educational purposes, mainly
 referencing the "Crafting Interpreter" book but with my own implementation
 to port into go.
 
 The project's purpose is for me to learn more about go and how programming
-languages work in general, so bugs and imperfect code all to be
+languages work in general, so bugs and imperfect code are to be
 expected. It's not a full-fledge product anyway.
 
 The remaining sections are mainly my notes and understandings on the
@@ -13,12 +13,13 @@ topic of interpreters.
 
 ## Process
 
-<source_code> -> lexing -> <tokens> -> parsing -> <AST> -> static
-analysis -> <intermediate_representation> -> optimize
+<source_code> -> lexing -> <tokens> -> parsing -> <syntax_tree> -> static
+analysis -> <intermediate_representation> -> optimize -> code gen
+(native or bytecode)
 
 ### Asides (read more)
 
-IR (intermediate representation):
+Intermediate representation (IR):
 - Control flow graph
 - Static single-assignment
 - Continuation-passing style
@@ -33,6 +34,21 @@ Optimization:
 - Scalar replacement of aggregates
 - Dead code elimination
 - Loop unrolling
+
+## Tree-walk interpreter
+
+Basically, the interpreter will begin executing code right after parsing
+it into an AST by traversing the syntax tree one branch and leaf at a
+time and evaluate each node as it goes.
+
+It is simple enough for me to implement.
+
+## Compiler vs Interpreter
+
+- Compiler: Translates one source to another (usually machine code or bytecode)
+  without executing it.
+- Interpreter: Takes in source code and executes it immediately. It runs
+  programs "from source".
 
 ## License
 
