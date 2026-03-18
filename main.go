@@ -53,7 +53,7 @@ func (p *program) runPrompt() {
 
 // run executes the interpreter for a source
 func (p *program) run(source string) {
-	l := &lexer{source: source}
+	l := newLexer(source)
 	tokens := l.scanTokens()
 
 	for _, token := range tokens {

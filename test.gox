@@ -1,1 +1,1 @@
-a+b=c
+var language = "lox";
