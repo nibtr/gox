@@ -11,6 +11,26 @@ expected. It's not a full-fledge product anyway.
 The remaining sections are mainly my notes and understandings on the
 topic of interpreters.
 
+## Features
+
+- Dynamic typing
+- GC
+- Types:
+  - Booleans
+  - Numbers: double precision floating point
+  - Strings
+  - nil
+- Expressions:
+  - Arithmetic
+  - Comparison
+  - Logical operators
+- Statements
+- Variables
+- Control flow
+- Functions: first class -> Closures
+- Classes
+- Standard lib
+
 ## Process
 
 <source_code> -> lexing -> <tokens> -> parsing -> <syntax_tree> -> static
