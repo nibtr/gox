@@ -12,7 +12,7 @@ func main() {
 	l := len(args)
 
 	if l > 1 {
-		fmt.Println("Usage: go run ./main.go [script]")
+		fmt.Println("Usage: ./goitr [script]")
 	} else if l == 1 {
 		runFile(args[0])
 	} else {
@@ -58,5 +58,10 @@ func runPrompt() {
 
 // run executes the interpreter for a source
 func run(source string) {
-	fmt.Println(source)
+	l := &lexer{source: source}
+	tokens := l.scanTokens()
+
+	for _, token := range tokens {
+		fmt.Println(token)
+	}
 }
