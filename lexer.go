@@ -1,10 +1,20 @@
 package main
 
+import "fmt"
+
 type lexer struct {
 	source string
 }
 
 type token struct {
+	tokenType tokenType
+	lexeme    string
+	literal   any
+	line      uint32
+}
+
+func (t token) String() string {
+	return fmt.Sprintf("%v %v %v", t.tokenType, t.lexeme, t.literal)
 }
 
 // scanTokens scans the source and extract the tokens
