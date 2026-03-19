@@ -94,6 +94,26 @@ func (l *lexer) scanToken() {
 			l.addToken(GREATER)
 		}
 
+	case '/':
+		// comments
+		if l.match('/') {
+			// keep consuming (skipping) char until newline or end of source
+			for l.peek() != '\n' && !l.isAtEnd() {
+				l.advance()
+			}
+		} else {
+			l.addToken(SLASH)
+		}
+
+	// skip whitespace
+	case ' ':
+	case '\r':
+	case '\t':
+		break
+
+	case '\n':
+		l.line++
+
 	default:
 		printError(l.line, "Unexpected character.")
 	}
@@ -106,7 +126,7 @@ func (l *lexer) advance() byte {
 }
 
 // match checks if the current character equals to `expected`
-// and then advances `current` by 1
+// and advances `current` by 1 if they do match
 func (l *lexer) match(expected byte) bool {
 	if l.isAtEnd() {
 		return false
@@ -118,6 +138,15 @@ func (l *lexer) match(expected byte) bool {
 
 	l.current++
 	return true
+}
+
+// peek returns the current character without advancing `current`
+func (l *lexer) peek() byte {
+	if l.isAtEnd() {
+		return '\x00' // null character
+	}
+
+	return l.source[l.current]
 }
 
 func (l *lexer) addToken(tokenType tokenType, literal ...any) {
