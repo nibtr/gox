@@ -1,6 +1,6 @@
-# goitr
+# gox
 
-goitr is a simple tree-walk interpreter for educational purposes, mainly
+gox is a simple tree-walk interpreter for educational purposes, mainly
 referencing the "Crafting Interpreter" book but with my own implementation
 to port into go.
 

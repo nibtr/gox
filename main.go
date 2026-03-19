@@ -20,7 +20,7 @@ func (p *program) runFile(path string) {
 
 	p.run(string(bytes))
 	if p.hadError {
-		os.Exit(65)
+		os.Exit(1)
 	}
 }
 
