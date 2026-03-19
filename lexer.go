@@ -30,8 +30,6 @@ func newLexer(source string) *lexer {
 // scanTokens scans the source and extract the tokens
 func (l *lexer) scanTokens() []token {
 	for !l.isAtEnd() {
-		// reset `start` so that we're at the beginning of the next lexeme
-		l.start = l.current
 		l.scanToken()
 	}
 
@@ -43,7 +41,12 @@ func (l *lexer) scanTokens() []token {
 // scanToken scans an individual token,
 // mutates the `current` pointer in the process
 func (l *lexer) scanToken() {
+	// reset `start` so that we're at the beginning of the next lexeme
+	l.start = l.current
+
+	// this fn returns the current character THEN moves `current` up by 1
 	c := l.advance()
+
 	switch c {
 	case '(':
 		l.addToken(LEFT_PAREN)
@@ -65,15 +68,56 @@ func (l *lexer) scanToken() {
 		l.addToken(SEMICOLON)
 	case '*':
 		l.addToken(STAR)
+
+	case '!':
+		if l.match('=') {
+			l.addToken(BANG_EQUAL)
+		} else {
+			l.addToken(BANG)
+		}
+	case '=':
+		if l.match('=') {
+			l.addToken(EQUAL_EQUAL)
+		} else {
+			l.addToken(EQUAL)
+		}
+	case '<':
+		if l.match('=') {
+			l.addToken(LESS_EQUAL)
+		} else {
+			l.addToken(LESS)
+		}
+	case '>':
+		if l.match('=') {
+			l.addToken(GREATER_EQUAL)
+		} else {
+			l.addToken(GREATER)
+		}
+
 	default:
 		printError(l.line, "Unexpected character.")
 	}
 }
 
-// advance advances the current pointer by 1
+// advance returns the current character and then advances `current` by 1.
 func (l *lexer) advance() byte {
 	l.current++
 	return l.source[l.current-1]
+}
+
+// match checks if the current character equals to `expected`
+// and then advances `current` by 1
+func (l *lexer) match(expected byte) bool {
+	if l.isAtEnd() {
+		return false
+	}
+
+	if l.source[l.current] != expected {
+		return false
+	}
+
+	l.current++
+	return true
 }
 
 func (l *lexer) addToken(tokenType tokenType, literal ...any) {
@@ -183,6 +227,15 @@ var tokenName = map[tokenType]string{
 	SEMICOLON:   "SEMICOLON",
 	SLASH:       "SLASH",
 	STAR:        "STAR",
+
+	BANG:          "BANG",
+	BANG_EQUAL:    "BANG_EQUAL",
+	EQUAL:         "EQUAL",
+	EQUAL_EQUAL:   "EQUAL_EQUAL",
+	LESS:          "LESS",
+	LESS_EQUAL:    "LESS_EQUAL",
+	GREATER:       "GREATER",
+	GREATER_EQUAL: "GREATER_EQUAL",
 
 	EOF: "EOF",
 }
