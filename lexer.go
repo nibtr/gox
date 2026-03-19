@@ -124,6 +124,8 @@ func (l *lexer) scanToken() {
 	default:
 		if l.isDigit(c) {
 			l.number()
+		} else if l.isAlpha(c) {
+			l.identifier()
 		} else {
 			printError(l.line, "Unexpected character.")
 		}
@@ -212,6 +214,20 @@ func (l *lexer) number() {
 	l.addToken(NUMBER, value)
 }
 
+func (l *lexer) identifier() {
+	for l.isAlphaNumeric(l.peek()) {
+		l.advance()
+	}
+
+	value := l.source[l.start:l.current]
+	t := IDENTIFIER
+	if v, ok := keywords[value]; ok {
+		t = v
+	}
+
+	l.addToken(t)
+}
+
 // addToken append a new token to `tokens`
 func (l *lexer) addToken(tokenType tokenType, literal ...any) {
 	lexeme := l.source[l.start:l.current]
@@ -231,6 +247,16 @@ func (l *lexer) addToken(tokenType tokenType, literal ...any) {
 
 func (l *lexer) isDigit(c byte) bool {
 	return c >= '0' && c <= '9'
+}
+
+func (l *lexer) isAlpha(c byte) bool {
+	return (c >= 'a' && c <= 'z') ||
+		(c >= 'A' && c <= 'Z') ||
+		c == '_'
+}
+
+func (l *lexer) isAlphaNumeric(c byte) bool {
+	return l.isAlpha(c) || l.isDigit(c)
 }
 
 // isAtEnd checks if the current pointer is at the end of source

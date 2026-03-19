@@ -60,7 +60,7 @@ const (
 	CLASS
 	ELSE
 	FALSE
-	FUN
+	FUNC
 	FOR
 	IF
 	NIL
@@ -98,7 +98,44 @@ var tokenName = map[tokenType]string{
 	GREATER:       "GREATER",
 	GREATER_EQUAL: "GREATER_EQUAL",
 
-	NUMBER: "NUMBER",
+	NUMBER:     "NUMBER",
+	IDENTIFIER: "IDENTIFER",
+
+	AND:    "AND",
+	CLASS:  "CLASS",
+	ELSE:   "ELSE",
+	FALSE:  "FALSE",
+	FUNC:   "FUNC",
+	FOR:    "FOR",
+	IF:     "IF",
+	NIL:    "NIL",
+	OR:     "OR",
+	PRINT:  "PRINT",
+	RETURN: "RETURN",
+	SUPER:  "SUPER",
+	THIS:   "THIS",
+	TRUE:   "TRUE",
+	VAR:    "VAR",
+	WHILE:  "WHILE",
 
 	EOF: "EOF",
+}
+
+var keywords = map[string]tokenType{
+	"and":    AND,
+	"class":  CLASS,
+	"else":   ELSE,
+	"false":  FALSE,
+	"func":   FUNC,
+	"for":    FOR,
+	"if":     IF,
+	"nil":    NIL,
+	"or":     OR,
+	"print":  PRINT,
+	"return": RETURN,
+	"super":  SUPER,
+	"this":   THIS,
+	"true":   TRUE,
+	"var":    VAR,
+	"while":  WHILE,
 }
