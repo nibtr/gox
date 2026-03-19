@@ -65,6 +65,8 @@ func (l *lexer) scanToken() {
 		l.addToken(SEMICOLON)
 	case '*':
 		l.addToken(STAR)
+	default:
+		printError(l.line, "Unexpected character.")
 	}
 }
 
