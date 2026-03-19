@@ -105,6 +105,9 @@ func (l *lexer) scanToken() {
 			l.addToken(SLASH)
 		}
 
+	case '"':
+		l.string()
+
 	// skip whitespace
 	case ' ':
 	case '\r':
@@ -147,6 +150,26 @@ func (l *lexer) peek() byte {
 	}
 
 	return l.source[l.current]
+}
+
+// string consumes the `current` to get the literal string value
+func (l *lexer) string() {
+	for l.peek() != '"' && !l.isAtEnd() {
+		if l.peek() == '\n' {
+			l.line++
+		}
+		l.advance()
+	}
+
+	if l.isAtEnd() {
+		printError(l.line, "Unterminated string")
+		return
+	}
+
+	l.advance() // the closing "
+
+	value := l.source[l.start+1 : l.current-1]
+	l.addToken(STRING, value)
 }
 
 func (l *lexer) addToken(tokenType tokenType, literal ...any) {

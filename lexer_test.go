@@ -46,6 +46,13 @@ func TestLexer(t *testing.T) {
 				newToken(EOF, "", nil, 6),
 			},
 		},
+		{
+			input: `"This is a string"`,
+			expected: []token{
+				newToken(STRING, `"This is a string"`, "This is a string", 1),
+				newToken(EOF, "", nil, 1),
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -74,9 +81,7 @@ func TestLexer(t *testing.T) {
 				if token.line != test.expected[i].line {
 					t.Errorf("Token line mismatch at index %d: expected %v, got %v", i, test.expected[i].line, token.line)
 				}
-
 			}
-
 		})
 	}
 }
