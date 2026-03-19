@@ -53,6 +53,16 @@ func TestLexer(t *testing.T) {
 				newToken(EOF, "", nil, 1),
 			},
 		},
+		{
+			input: `12.5 + 6.9;`,
+			expected: []token{
+				newToken(NUMBER, "12.5", 12.5, 1),
+				newToken(PLUS, "+", nil, 1),
+				newToken(NUMBER, "6.9", 6.9, 1),
+				newToken(SEMICOLON, ";", nil, 1),
+				newToken(EOF, "", nil, 1),
+			},
+		},
 	}
 
 	for _, test := range tests {
