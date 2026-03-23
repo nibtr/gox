@@ -48,7 +48,8 @@ func (l *lexer) scanToken() {
 	// reset `start` so that we're at the beginning of the next lexeme
 	l.start = l.current
 
-	// this fn returns the current character THEN moves `current` up by 1
+	// since `advance()` returns the current character THEN moves `current` up by 1
+	// in the cases below, `current` is 1 character after `c`
 	c := l.advance()
 
 	switch c {
@@ -99,10 +100,28 @@ func (l *lexer) scanToken() {
 		}
 
 	case '/':
-		// comments
 		if l.match('/') {
+			// line comments
 			// keep consuming (skipping) char until newline or end of source
 			for l.peek() != '\n' && !l.isAtEnd() {
+				l.advance()
+			}
+		} else if l.match('*') {
+			// block comments
+			for !l.isAtEnd() {
+				// block comment ends
+				if l.peek() == '*' && l.peekNext() == '/' {
+					l.advance() // skip *
+					l.advance() // skip /
+
+					break
+				}
+
+				if l.peek() == '\n' {
+					l.line++
+				}
+
+				// keep consuming (skipping) char
 				l.advance()
 			}
 		} else {

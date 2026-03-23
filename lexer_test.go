@@ -63,6 +63,18 @@ func TestLexer(t *testing.T) {
 				newToken(EOF, "", nil, 1),
 			},
 		},
+		{
+			input: `/*
+func disabled() {}
+*/
+
+"hello world";`,
+			expected: []token{
+				newToken(STRING, `"hello world"`, "hello world", 5),
+				newToken(SEMICOLON, ";", nil, 5),
+				newToken(EOF, "", nil, 5),
+			},
+		},
 	}
 
 	for _, test := range tests {
