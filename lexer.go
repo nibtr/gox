@@ -191,7 +191,7 @@ func (l *lexer) string() {
 	l.addToken(STRING, value)
 }
 
-// 1234.555;
+// number checks if current token is a number
 func (l *lexer) number() {
 	// consume digits
 	for l.isDigit(l.peek()) {
@@ -214,6 +214,7 @@ func (l *lexer) number() {
 	l.addToken(NUMBER, value)
 }
 
+// identifier checks if current token is an identifier
 func (l *lexer) identifier() {
 	for l.isAlphaNumeric(l.peek()) {
 		l.advance()
@@ -245,16 +246,19 @@ func (l *lexer) addToken(tokenType tokenType, literal ...any) {
 	l.tokens = append(l.tokens, newToken(tokenType, lexeme, value, l.line))
 }
 
+// isDigit checks if a character is a digit
 func (l *lexer) isDigit(c byte) bool {
 	return c >= '0' && c <= '9'
 }
 
+// isAlpha checks if a character is an alphabet
 func (l *lexer) isAlpha(c byte) bool {
 	return (c >= 'a' && c <= 'z') ||
 		(c >= 'A' && c <= 'Z') ||
 		c == '_'
 }
 
+// isAlphaNumeric checks if a character is either a digit or an alphabet
 func (l *lexer) isAlphaNumeric(c byte) bool {
 	return l.isAlpha(c) || l.isDigit(c)
 }

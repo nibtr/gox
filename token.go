@@ -100,6 +100,7 @@ var tokenName = map[tokenType]string{
 
 	NUMBER:     "NUMBER",
 	IDENTIFIER: "IDENTIFER",
+	STRING:     "STRING",
 
 	AND:    "AND",
 	CLASS:  "CLASS",
