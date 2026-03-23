@@ -22,6 +22,7 @@ func runFile(path string) {
 
 // runPrompt runs the interpreter for the current prompt from user
 func runPrompt() {
+	// TODO: maybe use github.com/chzyer/readline to handle arrow keys?
 	scanner := bufio.NewScanner(os.Stdin)
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
