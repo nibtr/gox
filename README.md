@@ -96,6 +96,7 @@ number.
 
 E.g: `1 - (2 * 3) < 4 == false`
 
+```
 expression -> literal
               | unary
               | binary
@@ -106,6 +107,7 @@ grouping   -> "(" expression ")"
 unary      -> ("-" | "!") expression ;
 binary     -> expression operator expression;
 operator   -> "==" | "!=" | "<" | "<=" | ">" | ">=" | "+" | "-" | "*" | "/" ;
+```
 
 **Note**: CAPITALIZE terminals that are a single lexeme whose text
 representation may vary. NUMBER is any number literal, and STRING is
