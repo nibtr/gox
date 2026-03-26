@@ -1,7 +1,14 @@
 package main
 
+type visitor interface {
+	visitBinary(n *binary) any
+	visitUnary(n *unary) any
+	visitGrouping(n *grouping) any
+	visitLiteral(n *literal) any
+}
+
 type expr interface {
-	accept(v visitor)
+	accept(v visitor) any
 }
 
 type binary struct {
@@ -23,18 +30,18 @@ type literal struct {
 	value any
 }
 
-func (b *binary) accept(v visitor) any {
-	return v.visitBinary(b)
+func (n *binary) accept(v visitor) any {
+	return v.visitBinary(n)
 }
 
-func (u *unary) accept(v visitor) any {
-	return v.visitUnary(u)
+func (n *unary) accept(v visitor) any {
+	return v.visitUnary(n)
 }
 
-func (g *grouping) accept(v visitor) any {
-	return v.visitGrouping(g)
+func (n *grouping) accept(v visitor) any {
+	return v.visitGrouping(n)
 }
 
-func (l *literal) accept(v visitor) any {
-	return v.visitLiteral(l)
+func (n *literal) accept(v visitor) any {
+	return v.visitLiteral(n)
 }
