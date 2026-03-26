@@ -1,8 +1,8 @@
 package main
 
 type visitor interface {
-	visitBinary(*binary) any
-	visitUnary(*unary) any
-	visitLiteral(*literal) any
-	visitGrouping(*grouping) any
+	visitBinary(n *binary) any
+	visitUnary(n *unary) any
+	visitLiteral(n *literal) any
+	visitGrouping(n *grouping) any
 }
