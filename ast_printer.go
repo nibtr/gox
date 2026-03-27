@@ -1,5 +1,7 @@
 package main
 
+import "strings"
+
 import "fmt"
 
 type astPrinter struct{}
@@ -48,16 +50,18 @@ func (v astPrinter) visitLiteral(n *literal) any {
 }
 
 func (v astPrinter) parenthesize(name string, expressions ...expr) string {
-	s := "(" + name
+	var s strings.Builder
+	s.WriteString("(" + name)
+
 	for _, e := range expressions {
-		s += " "
+		s.WriteString(" ")
 		str, ok := e.accept(v).(string)
 		if !ok {
 			panic("expected string")
 		}
-		s += str
+		s.WriteString(str)
 	}
-	s += ")"
+	s.WriteString(")")
 
-	return s
+	return s.String()
 }
