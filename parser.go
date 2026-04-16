@@ -2,15 +2,28 @@ package main
 
 import (
 	"fmt"
-	"math"
 	"slices"
 )
 
 type parser struct {
-	// `tokens` is the list of tokens from the lexer
-	tokens []token
-	// `current` is the pointer to the next token to be parsed
+	tokens  []token
 	current uint32
+}
+
+type parseError struct {
+	tok     *token
+	message string
+}
+
+func (e *parseError) Error() string {
+	if e.tok.tokenType == EOF {
+		return fmt.Sprintf("[line %d] Error at end: %s", e.tok.line, e.message)
+	}
+	return fmt.Sprintf("[line %d] Error at '%s': %s",
+		e.tok.line,
+		e.tok.lexeme,
+		e.message,
+	)
 }
 
 func newParser(tokens []token) *parser {
@@ -18,6 +31,10 @@ func newParser(tokens []token) *parser {
 		tokens:  tokens,
 		current: 0,
 	}
+}
+
+func (p *parser) Parse() (expr expr, err error) {
+	return p.expression(), nil
 }
 
 func (p *parser) expression() expr {
@@ -32,7 +49,7 @@ func (p *parser) equality() expr {
 		right := p.comparison()
 		expr = &binary{
 			left:     expr,
-			operator: operator,
+			operator: *operator,
 			right:    right,
 		}
 	}
@@ -48,7 +65,7 @@ func (p *parser) comparison() expr {
 		right := p.term()
 		expr = &binary{
 			left:     expr,
-			operator: operator,
+			operator: *operator,
 			right:    right,
 		}
 	}
@@ -64,7 +81,7 @@ func (p *parser) term() expr {
 		right := p.factor()
 		expr = &binary{
 			left:     expr,
-			operator: operator,
+			operator: *operator,
 			right:    right,
 		}
 	}
@@ -80,7 +97,7 @@ func (p *parser) factor() expr {
 		right := p.unary()
 		expr = &binary{
 			left:     expr,
-			operator: operator,
+			operator: *operator,
 			right:    right,
 		}
 	}
@@ -93,7 +110,7 @@ func (p *parser) unary() expr {
 		operator := p.previous()
 		right := p.unary()
 		return &unary{
-			operator: operator,
+			operator: *operator,
 			right:    right,
 		}
 	}
@@ -120,10 +137,12 @@ func (p *parser) primary() expr {
 		return &grouping{expr}
 	}
 
-	panic("Unexpected token")
+	panic(p.error(p.peek(), "Unexpected token"))
 }
 
-// ============== Helpers ====================
+//
+// ======== HELPERS ========
+//
 
 // match checks whether the current token matches any of the given types.
 // If a match is found, it advances the parser to the next token and returns true.
@@ -148,7 +167,7 @@ func (p *parser) check(t tokenType) bool {
 
 // advance consumes the token at `current` and returns it,
 // then advances `current` to next token
-func (p *parser) advance() token {
+func (p *parser) advance() *token {
 	if !p.isAtEnd() {
 		p.current++
 	}
@@ -161,24 +180,27 @@ func (p *parser) isAtEnd() bool {
 }
 
 // peek returns the token at `current`
-func (p *parser) peek() token {
-	return p.tokens[p.current]
+func (p *parser) peek() *token {
+	return &p.tokens[p.current]
 }
 
 // previous returns the most recently consumed token,
 // which is the token just before the current position (current - 1).
-func (p *parser) previous() token {
-	if p.current-1 < 0 {
-		return p.tokens[0]
-	}
-	return p.tokens[p.current-1]
+func (p *parser) previous() *token {
+	return &p.tokens[p.current-1]
 }
 
-func (p *parser) consume(t tokenType, message string) token {
+func (p *parser) consume(t tokenType, message string) *token {
 	if p.check(t) {
 		return p.advance()
 	}
 
-	// TODO: write an `error()` method for proper handling
-	panic(fmt.Sprintf("Parse error: %s", message))
+	panic(p.error(p.peek(), message))
+}
+
+func (p *parser) error(t *token, message string) *parseError {
+	return &parseError{
+		tok:     t,
+		message: message,
+	}
 }
