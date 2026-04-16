@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"slices"
 )
 
@@ -167,6 +168,9 @@ func (p *parser) peek() token {
 // previous returns the most recently consumed token,
 // which is the token just before the current position (current - 1).
 func (p *parser) previous() token {
+	if p.current-1 < 0 {
+		return p.tokens[0]
+	}
 	return p.tokens[p.current-1]
 }
 
