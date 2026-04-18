@@ -52,10 +52,18 @@ func runPrompt() {
 func run(source string) {
 	l := newLexer(source)
 	tokens := l.scanTokens()
+	parser := newParser(tokens)
+	expr, err := parser.Parse()
 
-	for _, token := range tokens {
-		fmt.Println(token)
+	if err != nil {
+		return
 	}
+
+	fmt.Println(astPrinter{}.print(expr))
+
+	// for _, token := range tokens {
+	// 	fmt.Println(token)
+	// }
 }
 
 func main() {

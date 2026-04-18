@@ -5,6 +5,8 @@ import (
 	"slices"
 )
 
+// TODO: better error handling
+
 type parser struct {
 	tokens  []token
 	current uint32
@@ -35,6 +37,30 @@ func newParser(tokens []token) *parser {
 
 func (p *parser) Parse() (expr expr, err error) {
 	return p.expression(), nil
+}
+
+func (p *parser) synchronize() {
+	p.advance()
+
+	for !p.isAtEnd() {
+		if p.previous().tokenType == SEMICOLON {
+			return
+		}
+
+		switch p.peek().tokenType {
+		case CLASS:
+		case FUNC:
+		case VAR:
+		case FOR:
+		case IF:
+		case WHILE:
+		case PRINT:
+		case RETURN:
+			return
+		}
+
+		p.advance()
+	}
 }
 
 func (p *parser) expression() expr {
@@ -137,7 +163,7 @@ func (p *parser) primary() expr {
 		return &grouping{expr}
 	}
 
-	panic(p.error(p.peek(), "Unexpected token"))
+	panic(p.error(p.peek(), "Expect expression."))
 }
 
 //
