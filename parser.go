@@ -5,8 +5,6 @@ import (
 	"slices"
 )
 
-// TODO: better error handling
-
 type parser struct {
 	tokens  []token
 	current uint32
@@ -43,7 +41,7 @@ func (p *parser) synchronize() {
 	p.advance()
 
 	for !p.isAtEnd() {
-		if p.previous().tokenType == SEMICOLON {
+		if t, _ := p.previous(); t.tokenType == SEMICOLON {
 			return
 		}
 
@@ -71,7 +69,7 @@ func (p *parser) equality() expr {
 	expr := p.comparison()
 
 	for p.match(BANG_EQUAL, EQUAL_EQUAL) {
-		operator := p.previous()
+		operator, _ := p.previous()
 		right := p.comparison()
 		expr = &binary{
 			left:     expr,
@@ -87,7 +85,7 @@ func (p *parser) comparison() expr {
 	expr := p.term()
 
 	for p.match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL) {
-		operator := p.previous()
+		operator, _ := p.previous()
 		right := p.term()
 		expr = &binary{
 			left:     expr,
@@ -103,7 +101,7 @@ func (p *parser) term() expr {
 	expr := p.factor()
 
 	for p.match(MINUS, PLUS) {
-		operator := p.previous()
+		operator, _ := p.previous()
 		right := p.factor()
 		expr = &binary{
 			left:     expr,
@@ -119,7 +117,7 @@ func (p *parser) factor() expr {
 	expr := p.unary()
 
 	for p.match(SLASH, STAR) {
-		operator := p.previous()
+		operator, _ := p.previous()
 		right := p.unary()
 		expr = &binary{
 			left:     expr,
@@ -133,7 +131,7 @@ func (p *parser) factor() expr {
 
 func (p *parser) unary() expr {
 	if p.match(BANG, MINUS) {
-		operator := p.previous()
+		operator, _ := p.previous()
 		right := p.unary()
 		return &unary{
 			operator: *operator,
@@ -155,7 +153,8 @@ func (p *parser) primary() expr {
 		return &literal{value: nil}
 	}
 	if p.match(NUMBER, STRING) {
-		return &literal{value: p.previous().literal}
+		t, _ := p.previous()
+		return &literal{value: t.literal}
 	}
 	if p.match(LEFT_PAREN) {
 		expr := p.expression()
@@ -163,6 +162,7 @@ func (p *parser) primary() expr {
 		return &grouping{expr}
 	}
 
+	// TODO: handle error return instead of panic
 	panic(p.error(p.peek(), "Expect expression."))
 }
 
@@ -193,7 +193,7 @@ func (p *parser) check(t tokenType) bool {
 
 // advance consumes the token at `current` and returns it,
 // then advances `current` to next token
-func (p *parser) advance() *token {
+func (p *parser) advance() (*token, error) {
 	if !p.isAtEnd() {
 		p.current++
 	}
@@ -212,16 +212,16 @@ func (p *parser) peek() *token {
 
 // previous returns the most recently consumed token,
 // which is the token just before the current position (current - 1).
-func (p *parser) previous() *token {
-	return &p.tokens[p.current-1]
+func (p *parser) previous() (*token, error) {
+	return &p.tokens[p.current-1], nil
 }
 
-func (p *parser) consume(t tokenType, message string) *token {
+func (p *parser) consume(t tokenType, message string) (*token, error) {
 	if p.check(t) {
 		return p.advance()
 	}
 
-	panic(p.error(p.peek(), message))
+	return nil, p.error(p.peek(), message)
 }
 
 func (p *parser) error(t *token, message string) *parseError {

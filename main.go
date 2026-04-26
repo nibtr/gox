@@ -60,10 +60,6 @@ func run(source string) {
 	}
 
 	fmt.Println(astPrinter{}.print(expr))
-
-	// for _, token := range tokens {
-	// 	fmt.Println(token)
-	// }
 }
 
 func main() {
