@@ -56,6 +56,7 @@ func run(source string) {
 	expr, err := parser.Parse()
 
 	if err != nil {
+		fmt.Printf("%v\n", err)
 		return
 	}
 
