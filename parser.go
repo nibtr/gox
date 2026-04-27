@@ -62,7 +62,39 @@ func (p *parser) synchronize() {
 }
 
 func (p *parser) expression() (expr, error) {
-	return p.equality()
+	return p.ternary()
+}
+
+func (p *parser) ternary() (expr, error) {
+	expr, err := p.equality()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.match(QUESTION) {
+		thenExpr, err := p.expression()
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = p.consume(COLON, "Expect ':' after ternary true branch")
+		if err != nil {
+			return nil, err
+		}
+
+		elseExpr, err := p.ternary() // right-associative
+		if err != nil {
+			return nil, err
+		}
+
+		return &ternary{
+			condition: expr,
+			thenExpr:  thenExpr,
+			elseExpr:  elseExpr,
+		}, nil
+	}
+
+	return expr, nil
 }
 
 func (p *parser) equality() (expr, error) {

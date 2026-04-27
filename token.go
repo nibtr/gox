@@ -36,9 +36,11 @@ const (
 	DOT
 	MINUS
 	PLUS
+	COLON
 	SEMICOLON
 	SLASH
 	STAR
+	QUESTION
 
 	// 1 or 2 character
 	BANG
@@ -85,9 +87,11 @@ var tokenName = map[tokenType]string{
 	DOT:         "DOT",
 	MINUS:       "MINUS",
 	PLUS:        "PLUS",
+	COLON:       "COLON",
 	SEMICOLON:   "SEMICOLON",
 	SLASH:       "SLASH",
 	STAR:        "STAR",
+	QUESTION:    "QUESTION",
 
 	BANG:          "BANG",
 	BANG_EQUAL:    "BANG_EQUAL",

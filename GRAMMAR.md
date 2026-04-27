@@ -44,7 +44,10 @@ any string literal.
 ### Precedence
 
 ```
-expression -> equality
+expression -> ternary 
+ternary    -> equality
+              | equality "?" expression ":" ternary ;
+
 equality   -> comparison ( ( "!=" | "==" ) comparison )* ;
 comparison -> term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term       -> factor ( ( "-" | "+" ) factor )* ;
@@ -56,4 +59,3 @@ unary      -> ( "!" | "-" ) unary
 primary    -> NUMBER | STRING | "true" | "false" | "nil"
               | "(" expression ")" ;
 ```
-

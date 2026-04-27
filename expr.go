@@ -1,6 +1,7 @@
 package main
 
 type visitor interface {
+	visitTernary(n *ternary) any
 	visitBinary(n *binary) any
 	visitUnary(n *unary) any
 	visitGrouping(n *grouping) any
@@ -9,6 +10,12 @@ type visitor interface {
 
 type expr interface {
 	accept(v visitor) any
+}
+
+type ternary struct {
+	condition expr
+	thenExpr  expr
+	elseExpr  expr
 }
 
 type binary struct {
@@ -28,6 +35,10 @@ type grouping struct {
 
 type literal struct {
 	value any
+}
+
+func (n *ternary) accept(v visitor) any {
+	return v.visitTernary(n)
 }
 
 func (n *binary) accept(v visitor) any {

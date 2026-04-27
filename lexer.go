@@ -71,8 +71,12 @@ func (l *lexer) scanToken() {
 		l.addToken(PLUS)
 	case ';':
 		l.addToken(SEMICOLON)
+	case ':':
+		l.addToken(COLON)
 	case '*':
 		l.addToken(STAR)
+	case '?':
+		l.addToken(QUESTION)
 
 	case '!':
 		if l.match('=') {

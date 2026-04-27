@@ -16,6 +16,10 @@ func (v astPrinter) print(e expr) string {
 	return str
 }
 
+func (v astPrinter) visitTernary(n *ternary) any {
+	return v.parenthesize("?:", n.condition, n.thenExpr, n.elseExpr)
+}
+
 func (v astPrinter) visitBinary(n *binary) any {
 	return v.parenthesize(n.operator.lexeme, n.left, n.right)
 }
