@@ -21,6 +21,7 @@ topic of interpreters.
   - Strings
   - nil
 - Expressions:
+  - Ternary
   - Arithmetic
   - Comparison
   - Logical operators
