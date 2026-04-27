@@ -52,7 +52,7 @@ func runPrompt() {
 func run(source string) {
 	l := newLexer(source)
 	tokens := l.scanTokens()
-	parser := newParser(tokens)
+	parser := NewParser(tokens)
 	expr, err := parser.Parse()
 
 	if err != nil {

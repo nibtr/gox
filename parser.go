@@ -26,7 +26,7 @@ func (e *parseError) Error() string {
 	)
 }
 
-func newParser(tokens []token) *parser {
+func NewParser(tokens []token) *parser {
 	return &parser{
 		tokens:  tokens,
 		current: 0,
@@ -254,6 +254,7 @@ func (p *parser) previous() (*token, error) {
 	return &p.tokens[p.current-1], nil
 }
 
+// consume advances the current pointer if it's the same as `t`
 func (p *parser) consume(t tokenType, message string) (*token, error) {
 	if p.check(t) {
 		return p.advance()
@@ -262,6 +263,7 @@ func (p *parser) consume(t tokenType, message string) (*token, error) {
 	return nil, p.error(p.peek(), message)
 }
 
+// error returns a parserError should any parsing errors occur
 func (p *parser) error(t *token, message string) *parseError {
 	return &parseError{
 		tok:     t,
