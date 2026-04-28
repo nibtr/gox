@@ -77,7 +77,7 @@ func (p *parser) ternary() (expr, error) {
 			return nil, err
 		}
 
-		_, err = p.consume(COLON, "Expect ':' after ternary true branch")
+		_, err = p.consume(COLON, "expect ':' after ternary true branch")
 		if err != nil {
 			return nil, err
 		}
@@ -229,11 +229,11 @@ func (p *parser) primary() (expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		p.consume(RIGHT_PAREN, "Expect ')' after expression.")
+		p.consume(RIGHT_PAREN, "expect ')' after expression.")
 		return &grouping{expr}, nil
 	}
 
-	return nil, p.error(p.peek(), "Expect expression.")
+	return nil, p.error(p.peek(), "expect expression.")
 }
 
 //
