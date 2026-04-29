@@ -1,20 +1,20 @@
 # gox
 
-gox is a simple tree-walk interpreter for educational purposes, mainly
-referencing the "Crafting Interpreter" book but with my own implementation
-to port into go.
+gox is a simple tree-walk interpreter written in Go.
 
-The project's purpose is for me to learn more about go and how programming
-languages work in general, so bugs and imperfect code are to be
-expected. It's not a full-fledge product anyway.
+The project is inspired by the book *Crafting Interpreters* book but
+with my own implementation to learn Go and understand how programming
+languages work internally.
 
-**Note**: Still a work in progress.
+This is a learning project and implementation details will evolve over time.
+
+**Status**: Work in progress.
 
 ## Tree-walk interpreter
 
-Basically, the interpreter will begin executing code right after parsing
-it into an AST by traversing the syntax tree one branch and leaf at a
-time and evaluate each node as it goes. It is simple enough for me to implement.
+The interpreter executes code by first parsing source code into an AST
+(Abstract Syntax Tree), then recursively evaluating each node. It is
+simple enough to learn.
 
 ## Features
 
@@ -22,7 +22,7 @@ time and evaluate each node as it goes. It is simple enough for me to implement.
 - GC
 - Types:
   - Booleans
-  - Numbers: double precision floating point
+  - Numbers: float64
   - Strings
   - nil
 - Expressions:
@@ -35,7 +35,7 @@ time and evaluate each node as it goes. It is simple enough for me to implement.
 - Control flow
 - Functions: first class -> Closures
 - Classes
-- Standard lib
+- Standard lib (planned)
 
 ## Process
 
