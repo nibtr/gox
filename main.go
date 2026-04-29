@@ -70,7 +70,7 @@ func main() {
 	l := len(args)
 
 	if l > 1 {
-		fmt.Println("Usage: ./goitr [script]")
+		fmt.Println("Usage: ./bin/gox [script]")
 	} else if l == 1 {
 		runFile(args[0])
 	} else {
