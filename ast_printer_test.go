@@ -15,7 +15,7 @@ func TestAstPrinter(t *testing.T) {
 	}
 
 	printer := astPrinter{}
-	output := printer.print(ex)
+	output := printer.Print(ex)
 	expected := "(* (- 123) (group 45.67))"
 
 	if output != expected {

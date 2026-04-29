@@ -60,7 +60,9 @@ func run(source string) {
 		return
 	}
 
-	fmt.Println(astPrinter{}.print(expr))
+	// fmt.Println(astPrinter{}.Print(expr))
+	intrp := interpreter{}
+	fmt.Println(expr.accept(&intrp))
 }
 
 func main() {

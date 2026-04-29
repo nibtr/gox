@@ -6,7 +6,7 @@ import "fmt"
 
 type astPrinter struct{}
 
-func (v astPrinter) print(e expr) string {
+func (v astPrinter) Print(e expr) string {
 	res := e.accept(v)
 	str, ok := res.(string)
 	if !ok {

@@ -1,9 +1,15 @@
 package main
 
+import "reflect"
+
 type interpreter struct{}
 
 func (v *interpreter) visitTernary(expr *ternary) any {
-	return ""
+	if isTruthy(v.evaluate(expr.condition)) {
+		return v.evaluate(expr.thenExpr)
+	} else {
+		return v.evaluate(expr.elseExpr)
+	}
 }
 
 func (v *interpreter) visitBinary(expr *binary) any {
@@ -17,7 +23,32 @@ func (v *interpreter) visitBinary(expr *binary) any {
 		return mustFloat64(left) * mustFloat64(right)
 	case SLASH:
 		return mustFloat64(left) / mustFloat64(right)
-		// TODO: case PLUS
+	case PLUS:
+		if l, ok := toFloat64(left); ok {
+			if r, ok := toFloat64(right); ok {
+				return l + r
+			}
+		}
+
+		if l, ok := left.(string); ok {
+			if r, ok := right.(string); ok {
+				return l + r
+			}
+		}
+		panic("operands must be two numbers or two strings")
+
+	case GREATER:
+		return mustFloat64(left) > mustFloat64(right)
+	case GREATER_EQUAL:
+		return mustFloat64(left) >= mustFloat64(right)
+	case LESS:
+		return mustFloat64(left) < mustFloat64(right)
+	case LESS_EQUAL:
+		return mustFloat64(left) <= mustFloat64(right)
+	case BANG_EQUAL:
+		return !isEqual(left, right)
+	case EQUAL_EQUAL:
+		return isEqual(left, right)
 	}
 
 	// unreachable
@@ -81,4 +112,8 @@ func isTruthy(e any) bool {
 	}
 
 	return false
+}
+
+func isEqual(a any, b any) bool {
+	return reflect.DeepEqual(a, b)
 }
