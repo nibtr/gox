@@ -2,7 +2,7 @@
 
 gox is a simple tree-walk interpreter written in Go.
 
-The project is inspired by the book *Crafting Interpreters* book but
+The project is inspired by the book *Crafting Interpreters* but
 with my own implementation to learn Go and understand how programming
 languages work internally.
 
