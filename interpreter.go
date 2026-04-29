@@ -1,6 +1,9 @@
 package main
 
-import "reflect"
+import (
+	"reflect"
+	"strings"
+)
 
 type interpreter struct{}
 
@@ -38,14 +41,27 @@ func (v *interpreter) visitBinary(expr *binary) any {
 		panic("operands must be two numbers or two strings")
 
 	case GREATER:
-		return mustFloat64(left) > mustFloat64(right)
+		if res, ok := compareValues(left, right); ok {
+			return res > 0
+		}
+		panic("operands must be two numbers or two strings")
 	case GREATER_EQUAL:
-		return mustFloat64(left) >= mustFloat64(right)
+		if res, ok := compareValues(left, right); ok {
+			return res >= 0
+		}
+		panic("operands must be two numbers or two strings")
 	case LESS:
-		return mustFloat64(left) < mustFloat64(right)
+		if res, ok := compareValues(left, right); ok {
+			return res < 0
+		}
+		panic("operands must be two numbers or two strings")
 	case LESS_EQUAL:
-		return mustFloat64(left) <= mustFloat64(right)
+		if res, ok := compareValues(left, right); ok {
+			return res <= 0
+		}
+		panic("operands must be two numbers or two strings")
 	case BANG_EQUAL:
+		// TODO: currently using deepEqual. Maybe we limit to compare only string & number ?
 		return !isEqual(left, right)
 	case EQUAL_EQUAL:
 		return isEqual(left, right)
@@ -112,6 +128,31 @@ func isTruthy(e any) bool {
 	}
 
 	return false
+}
+
+func compareValues(a, b any) (int, bool) {
+	// string compare
+	if l, ok := a.(string); ok {
+		if r, ok := b.(string); ok {
+			return strings.Compare(l, r), true
+		}
+	}
+
+	// number compare
+	if l, ok := toFloat64(a); ok {
+		if r, ok := toFloat64(b); ok {
+			switch {
+			case l < r:
+				return -1, true
+			case l > r:
+				return 1, true
+			default:
+				return 0, true
+			}
+		}
+	}
+
+	return 0, false
 }
 
 func isEqual(a any, b any) bool {
