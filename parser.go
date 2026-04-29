@@ -37,6 +37,7 @@ func (p *parser) Parse() (expr expr, err error) {
 	return p.expression()
 }
 
+// TODO: remember to synchronize errors
 func (p *parser) synchronize() {
 	p.advance()
 
