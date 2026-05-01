@@ -1,13 +1,23 @@
 package main
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 )
 
 type interpreter struct{}
 
-func (v *interpreter) visitTernary(expr *ternary) any {
+type runtimeError struct {
+	tok     *token
+	message string
+}
+
+func (e *runtimeError) Error() string {
+	return fmt.Sprintf("error at '%s': %s", e.tok.lexeme, e.message)
+}
+
+func (v *interpreter) visitTernary(expr *ternary) (any, error) {
 	if isTruthy(v.evaluate(expr.condition)) {
 		return v.evaluate(expr.thenExpr)
 	} else {
@@ -15,7 +25,7 @@ func (v *interpreter) visitTernary(expr *ternary) any {
 	}
 }
 
-func (v *interpreter) visitBinary(expr *binary) any {
+func (v *interpreter) visitBinary(expr *binary) (any, error) {
 	left := v.evaluate(expr.left)
 	right := v.evaluate(expr.right)
 
@@ -71,7 +81,7 @@ func (v *interpreter) visitBinary(expr *binary) any {
 	return nil
 }
 
-func (v *interpreter) visitUnary(expr *unary) any {
+func (v *interpreter) visitUnary(expr *unary) (any, error) {
 	right := v.evaluate(expr.right)
 	switch expr.operator.tokenType {
 	case MINUS:
@@ -85,15 +95,15 @@ func (v *interpreter) visitUnary(expr *unary) any {
 	return nil
 }
 
-func (v *interpreter) visitGrouping(expr *grouping) any {
+func (v *interpreter) visitGrouping(expr *grouping) (any, error) {
 	return v.evaluate(expr.expression)
 }
 
-func (v *interpreter) visitLiteral(expr *literal) any {
+func (v *interpreter) visitLiteral(expr *literal) (any, error) {
 	return expr.value
 }
 
-func (v *interpreter) evaluate(e expr) any {
+func (v *interpreter) evaluate(e expr) (any, error) {
 	return e.accept(v)
 }
 

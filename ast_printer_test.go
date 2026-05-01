@@ -15,7 +15,10 @@ func TestAstPrinter(t *testing.T) {
 	}
 
 	printer := astPrinter{}
-	output := printer.Print(ex)
+	output, err := printer.Print(ex)
+	if err != nil {
+		t.Errorf("%w", err)
+	}
 	expected := "(* (- 123) (group 45.67))"
 
 	if output != expected {

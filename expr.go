@@ -1,15 +1,15 @@
 package main
 
 type visitor interface {
-	visitTernary(n *ternary) any
-	visitBinary(n *binary) any
-	visitUnary(n *unary) any
-	visitGrouping(n *grouping) any
-	visitLiteral(n *literal) any
+	visitTernary(n *ternary) (any, error)
+	visitBinary(n *binary) (any, error)
+	visitUnary(n *unary) (any, error)
+	visitGrouping(n *grouping) (any, error)
+	visitLiteral(n *literal) (any, error)
 }
 
 type expr interface {
-	accept(v visitor) any
+	accept(v visitor) (any, error)
 }
 
 type ternary struct {
@@ -37,22 +37,22 @@ type literal struct {
 	value any
 }
 
-func (n *ternary) accept(v visitor) any {
+func (n *ternary) accept(v visitor) (any, error) {
 	return v.visitTernary(n)
 }
 
-func (n *binary) accept(v visitor) any {
+func (n *binary) accept(v visitor) (any, error) {
 	return v.visitBinary(n)
 }
 
-func (n *unary) accept(v visitor) any {
+func (n *unary) accept(v visitor) (any, error) {
 	return v.visitUnary(n)
 }
 
-func (n *grouping) accept(v visitor) any {
+func (n *grouping) accept(v visitor) (any, error) {
 	return v.visitGrouping(n)
 }
 
-func (n *literal) accept(v visitor) any {
+func (n *literal) accept(v visitor) (any, error) {
 	return v.visitLiteral(n)
 }
