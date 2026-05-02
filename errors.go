@@ -2,7 +2,10 @@ package main
 
 import "fmt"
 
+// TODO: maybe refactor this whole file lol
+
 var hadError bool = false
+var hadRuntimeError bool = false
 
 // TODO: maybe an ErrorReporter interface to abstract
 // how we report the error ?
@@ -16,4 +19,9 @@ func printError(line uint32, msg string) {
 func report(line uint32, where string, msg string) {
 	fmt.Printf("[line %v] - error %v: %v\n", line, where, msg)
 	hadError = true
+}
+
+func runtimeError(e *RuntimeError) {
+	fmt.Printf("%v\n[line %v]", e.message, e.tok.line)
+	hadRuntimeError = true
 }

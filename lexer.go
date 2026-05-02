@@ -1,10 +1,20 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 )
 
 const NULL_CHARACTER byte = '\x00'
+
+type LexerError struct {
+	message string
+	line    uint32
+}
+
+func (e *LexerError) Error() string {
+	return fmt.Sprintf("[line %v] - error %v: %v\n", e.line, "", e.message)
+}
 
 type lexer struct {
 	source string
@@ -32,19 +42,21 @@ func newLexer(source string) *lexer {
 }
 
 // scanTokens scans the source and extract the tokens
-func (l *lexer) scanTokens() []token {
+func (l *lexer) scanTokens() ([]token, error) {
 	for !l.isAtEnd() {
-		l.scanToken()
+		if err := l.scanToken(); err != nil {
+			return []token{}, err
+		}
 	}
 
 	// add an EOF at the end of source
 	l.tokens = append(l.tokens, newToken(EOF, "", nil, l.line))
-	return l.tokens
+	return l.tokens, nil
 }
 
 // scanToken scans an individual token,
 // mutates the `current` pointer in the process
-func (l *lexer) scanToken() {
+func (l *lexer) scanToken() *LexerError {
 	// reset `start` so that we're at the beginning of the next lexeme
 	l.start = l.current
 
@@ -133,7 +145,7 @@ func (l *lexer) scanToken() {
 		}
 
 	case '"':
-		l.string()
+		return l.string()
 
 	// skip whitespace
 	case ' ':
@@ -150,9 +162,14 @@ func (l *lexer) scanToken() {
 		} else if l.isAlpha(c) {
 			l.identifier()
 		} else {
-			printError(l.line, "Unexpected character.")
+			return &LexerError{
+				message: "Unexpected character",
+				line:    l.line,
+			}
 		}
 	}
+
+	return nil
 }
 
 // advance returns the current character and then advances `current` by 1.
@@ -195,7 +212,7 @@ func (l *lexer) peekNext() byte {
 }
 
 // string consumes the `current` to get the literal string value
-func (l *lexer) string() {
+func (l *lexer) string() *LexerError {
 	for l.peek() != '"' && !l.isAtEnd() {
 		if l.peek() == '\n' {
 			l.line++
@@ -204,14 +221,17 @@ func (l *lexer) string() {
 	}
 
 	if l.isAtEnd() {
-		printError(l.line, "Unterminated string")
-		return
+		return &LexerError{
+			message: "Unterminated string",
+			line:    l.line,
+		}
 	}
 
 	l.advance() // the closing "
 
 	value := l.source[l.start+1 : l.current-1]
 	l.addToken(STRING, value)
+	return nil
 }
 
 // number checks if current token is a number

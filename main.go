@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -14,9 +15,19 @@ func runFile(path string) {
 		panic(fmt.Errorf("read file %s: %w", path, err))
 	}
 
-	run(string(bytes))
-	if hadError {
-		os.Exit(1)
+	err = run(string(bytes))
+	var le *LexerError
+	var pe *ParseError
+	var re *RuntimeError
+
+	if errors.As(err, &le) {
+		os.Exit(65)
+	}
+	if errors.As(err, &pe) {
+		os.Exit(66)
+	}
+	if errors.As(err, &re) {
+		os.Exit(67)
 	}
 }
 
@@ -49,20 +60,31 @@ func runPrompt() {
 }
 
 // run executes the interpreter for a source
-func run(source string) {
+func run(source string) error {
 	l := newLexer(source)
-	tokens := l.scanTokens()
-	parser := NewParser(tokens)
-	expr, err := parser.Parse()
-
+	tokens, err := l.scanTokens()
 	if err != nil {
 		fmt.Printf("%v\n", err)
-		return
+		return err
+	}
+
+	parser := NewParser(tokens)
+	expr, err := parser.Parse()
+	if err != nil {
+		fmt.Printf("%v\n", err)
+		return err
 	}
 
 	// fmt.Println(astPrinter{}.Print(expr))
 	intrp := interpreter{}
-	intrp.Intepret(expr)
+	value, err := intrp.Intepret(expr)
+	if err != nil {
+		fmt.Printf("%v\n", err)
+		return err
+	}
+	fmt.Println(value)
+
+	return nil
 }
 
 func main() {

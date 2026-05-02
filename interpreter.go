@@ -8,24 +8,18 @@ import (
 
 type interpreter struct{}
 
-// runtimeError represents a runtime evaluation error tied to a token.
-type runtimeError struct {
+// RuntimeError represents a runtime evaluation error tied to a token.
+type RuntimeError struct {
 	tok     *token
 	message string
 }
 
-func (e *runtimeError) Error() string {
-	return fmt.Sprintf("error at '%s': %s", e.tok.lexeme, e.message)
+func (e *RuntimeError) Error() string {
+	return fmt.Sprintf("error at '%s': %s\n", e.tok.lexeme, e.message)
 }
 
-func (v *interpreter) Intepret(e expr) {
-	value, err := v.evaluate(e)
-	if err != nil {
-		// TODO: report runtime error
-		fmt.Println(err)
-	} else {
-		fmt.Println(value)
-	}
+func (v *interpreter) Intepret(e expr) (any, error) {
+	return v.evaluate(e)
 }
 
 func (v *interpreter) visitTernary(expr *ternary) (any, error) {
@@ -71,7 +65,7 @@ func (v *interpreter) visitBinary(expr *binary) (any, error) {
 			return nil, err
 		}
 		if r == 0 {
-			return nil, &runtimeError{
+			return nil, &RuntimeError{
 				tok:     &expr.operator,
 				message: "division by zero",
 			}
@@ -84,7 +78,7 @@ func (v *interpreter) visitBinary(expr *binary) (any, error) {
 			if r, ok := right.(string); ok {
 				return l + r, nil
 			}
-			return nil, &runtimeError{
+			return nil, &RuntimeError{
 				tok:     &expr.operator,
 				message: "operands must be two strings",
 			}
@@ -173,10 +167,10 @@ func toFloat64(v any) (float64, bool) {
 }
 
 // asFloat64 validates and converts a single operand (used for unary ops)
-func asFloat64(operator *token, operand any) (float64, *runtimeError) {
+func asFloat64(operator *token, operand any) (float64, *RuntimeError) {
 	n, ok := toFloat64(operand)
 	if !ok {
-		return 0, &runtimeError{
+		return 0, &RuntimeError{
 			tok:     operator,
 			message: "operand must be a number",
 		}
@@ -185,12 +179,12 @@ func asFloat64(operator *token, operand any) (float64, *runtimeError) {
 }
 
 // asTwoFloat64 validates and converts two operands (used for binary math ops)
-func asTwoFloat64(op *token, left, right any) (float64, float64, *runtimeError) {
+func asTwoFloat64(op *token, left, right any) (float64, float64, *RuntimeError) {
 	l, lok := toFloat64(left)
 	r, rok := toFloat64(right)
 
 	if !lok || !rok {
-		return 0, 0, &runtimeError{
+		return 0, 0, &RuntimeError{
 			tok:     op,
 			message: "operands must be two numbers",
 		}
@@ -222,14 +216,14 @@ func isTruthy(e any) bool {
 
 // compareOperands compares two values if both are numbers or both are strings
 // returns: -1 (a < b), 0 (a == b), 1 (a > b)
-func compareOperands(a, b any, operator *token) (int, *runtimeError) {
+func compareOperands(a, b any, operator *token) (int, *RuntimeError) {
 	// string compare
 	if l, ok := a.(string); ok {
 		if r, ok := b.(string); ok {
 			return strings.Compare(l, r), nil
 		}
 
-		return 0, &runtimeError{
+		return 0, &RuntimeError{
 			tok:     operator,
 			message: "operands must be two strings",
 		}

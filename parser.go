@@ -10,16 +10,16 @@ type parser struct {
 	current uint32
 }
 
-type parseError struct {
+type ParseError struct {
 	tok     *token
 	message string
 }
 
-func (e *parseError) Error() string {
+func (e *ParseError) Error() string {
 	if e.tok.tokenType == EOF {
-		return fmt.Sprintf("[line %d] Error at end: %s", e.tok.line, e.message)
+		return fmt.Sprintf("[line %d] Error at end: %s\n", e.tok.line, e.message)
 	}
-	return fmt.Sprintf("[line %d] Error at '%s': %s",
+	return fmt.Sprintf("[line %d] Error at '%s': %s\n",
 		e.tok.line,
 		e.tok.lexeme,
 		e.message,
@@ -299,8 +299,8 @@ func (p *parser) consume(t tokenType, message string) (*token, error) {
 }
 
 // error returns a parserError should any parsing errors occur
-func (p *parser) error(t *token, message string) *parseError {
-	return &parseError{
+func (p *parser) error(t *token, message string) *ParseError {
+	return &ParseError{
 		tok:     t,
 		message: message,
 	}

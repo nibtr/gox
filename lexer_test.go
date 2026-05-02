@@ -80,7 +80,10 @@ func disabled() {}
 	for _, test := range tests {
 		t.Run("Lexing", func(t *testing.T) {
 			l := newLexer(test.input)
-			tokens := l.scanTokens()
+			tokens, err := l.scanTokens()
+			if err != nil {
+				t.Errorf("%v", err)
+			}
 
 			// compare tokens
 			for i, token := range tokens {
