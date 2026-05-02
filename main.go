@@ -62,7 +62,7 @@ func run(source string) {
 
 	// fmt.Println(astPrinter{}.Print(expr))
 	intrp := interpreter{}
-	fmt.Println(expr.accept(&intrp))
+	intrp.Intepret(expr)
 }
 
 func main() {

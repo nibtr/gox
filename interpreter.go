@@ -18,6 +18,15 @@ func (e *runtimeError) Error() string {
 	return fmt.Sprintf("error at '%s': %s", e.tok.lexeme, e.message)
 }
 
+func (v *interpreter) Intepret(e expr) {
+	value, err := v.evaluate(e)
+	if err != nil {
+		// TODO: report runtime error
+	} else {
+		fmt.Println(value)
+	}
+}
+
 func (v *interpreter) visitTernary(expr *ternary) (any, error) {
 	val, err := v.evaluate(expr.condition)
 	if err != nil {
