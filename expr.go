@@ -1,10 +1,15 @@
 package main
 
 type visitor interface {
+	// visitTernary evaluates condition ? thenExpr : elseExpr
 	visitTernary(n *ternary) (any, error)
+	// visitBinary evaluates binary expressions like +, -, *, /, comparisons
 	visitBinary(n *binary) (any, error)
+	// visitUnary evaluates unary expressions like -x and !x
 	visitUnary(n *unary) (any, error)
+	// visitGrouping evaluates expressions inside parentheses (...)
 	visitGrouping(n *grouping) (any, error)
+	// visitLiteral returns a literal value directly
 	visitLiteral(n *literal) (any, error)
 }
 

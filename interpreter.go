@@ -8,6 +8,7 @@ import (
 
 type interpreter struct{}
 
+// runtimeError represents a runtime evaluation error tied to a token.
 type runtimeError struct {
 	tok     *token
 	message string
@@ -18,7 +19,11 @@ func (e *runtimeError) Error() string {
 }
 
 func (v *interpreter) visitTernary(expr *ternary) (any, error) {
-	if isTruthy(v.evaluate(expr.condition)) {
+	val, err := v.evaluate(expr.condition)
+	if err != nil {
+		return nil, err
+	}
+	if isTruthy(val) {
 		return v.evaluate(expr.thenExpr)
 	} else {
 		return v.evaluate(expr.elseExpr)
@@ -26,73 +31,108 @@ func (v *interpreter) visitTernary(expr *ternary) (any, error) {
 }
 
 func (v *interpreter) visitBinary(expr *binary) (any, error) {
-	left := v.evaluate(expr.left)
-	right := v.evaluate(expr.right)
+	left, err := v.evaluate(expr.left)
+	if err != nil {
+		return nil, err
+	}
+	right, err := v.evaluate(expr.right)
+	if err != nil {
+		return nil, err
+	}
 
 	switch expr.operator.tokenType {
 	case MINUS:
-		return mustFloat64(left) - mustFloat64(right)
+		l, r, err := asTwoFloat64(&expr.operator, left, right)
+		if err != nil {
+			return nil, err
+		}
+		return l - r, nil
+
 	case STAR:
-		return mustFloat64(left) * mustFloat64(right)
+		l, r, err := asTwoFloat64(&expr.operator, left, right)
+		if err != nil {
+			return nil, err
+		}
+		return l * r, nil
+
 	case SLASH:
-		return mustFloat64(left) / mustFloat64(right)
-	case PLUS:
-		if l, ok := toFloat64(left); ok {
-			if r, ok := toFloat64(right); ok {
-				return l + r
+		l, r, err := asTwoFloat64(&expr.operator, left, right)
+		if err != nil {
+			return nil, err
+		}
+		if r == 0 {
+			return nil, &runtimeError{
+				tok:     &expr.operator,
+				message: "division by zero",
 			}
 		}
+		return l / r, nil
 
+	case PLUS:
+		// string concatenation only allowed if both operands are strings
 		if l, ok := left.(string); ok {
 			if r, ok := right.(string); ok {
-				return l + r
+				return l + r, nil
+			}
+			return nil, &runtimeError{
+				tok:     &expr.operator,
+				message: "operands must be two strings",
 			}
 		}
-		panic("operands must be two numbers or two strings")
 
-	case GREATER:
-		if res, ok := compareValues(left, right); ok {
-			return res > 0
+		// otherwise treat as numeric addition
+		l, r, err := asTwoFloat64(&expr.operator, left, right)
+		if err != nil {
+			return nil, err
 		}
-		panic("operands must be two numbers or two strings")
-	case GREATER_EQUAL:
-		if res, ok := compareValues(left, right); ok {
-			return res >= 0
+		return l + r, nil
+
+	case GREATER, GREATER_EQUAL, LESS, LESS_EQUAL:
+		res, err := compareOperands(left, right, &expr.operator)
+		if err != nil {
+			return nil, err
 		}
-		panic("operands must be two numbers or two strings")
-	case LESS:
-		if res, ok := compareValues(left, right); ok {
-			return res < 0
+
+		switch expr.operator.tokenType {
+		case GREATER:
+			return res > 0, nil
+		case GREATER_EQUAL:
+			return res >= 0, nil
+		case LESS:
+			return res < 0, nil
+		case LESS_EQUAL:
+			return res <= 0, nil
 		}
-		panic("operands must be two numbers or two strings")
-	case LESS_EQUAL:
-		if res, ok := compareValues(left, right); ok {
-			return res <= 0
-		}
-		panic("operands must be two numbers or two strings")
+
 	case BANG_EQUAL:
 		// TODO: currently using deepEqual. Maybe we limit to compare only string & number ?
-		return !isEqual(left, right)
+		return !isEqual(left, right), nil
 	case EQUAL_EQUAL:
-		return isEqual(left, right)
+		return isEqual(left, right), nil
 	}
 
 	// unreachable
-	return nil
+	panic("unreachable")
 }
 
 func (v *interpreter) visitUnary(expr *unary) (any, error) {
-	right := v.evaluate(expr.right)
+	right, err := v.evaluate(expr.right)
+	if err != nil {
+		return nil, err
+	}
 	switch expr.operator.tokenType {
 	case MINUS:
-		// TODO: check this, we don't know the type of right, so for now just cast it to float64
-		return -mustFloat64(right)
+		n, err := asFloat64(&expr.operator, right)
+		if err != nil {
+			return nil, err
+		}
+		return -n, nil
 	case BANG:
-		return !isTruthy(right)
+		return !isTruthy(right), nil
 	}
 
 	// unreachable
-	return nil
+	panic("unreachable")
 }
 
 func (v *interpreter) visitGrouping(expr *grouping) (any, error) {
@@ -100,13 +140,15 @@ func (v *interpreter) visitGrouping(expr *grouping) (any, error) {
 }
 
 func (v *interpreter) visitLiteral(expr *literal) (any, error) {
-	return expr.value
+	return expr.value, nil
 }
 
+// evaluate dispatches AST node evaluation
 func (v *interpreter) evaluate(e expr) (any, error) {
 	return e.accept(v)
 }
 
+// toFloat64 converts supported numeric types into float64
 func toFloat64(v any) (float64, bool) {
 	switch n := v.(type) {
 	case float64:
@@ -120,51 +162,102 @@ func toFloat64(v any) (float64, bool) {
 	}
 }
 
-func mustFloat64(v any) float64 {
-	n, ok := toFloat64(v)
+// asFloat64 validates and converts a single operand (used for unary ops)
+func asFloat64(operator *token, operand any) (float64, *runtimeError) {
+	n, ok := toFloat64(operand)
 	if !ok {
-		// TODO: check this, for now can just panic
-		panic("operand must be a number")
+		return 0, &runtimeError{
+			tok:     operator,
+			message: "operand must be a number",
+		}
 	}
-	return n
+	return n, nil
 }
 
+// asTwoFloat64 validates and converts two operands (used for binary math ops)
+func asTwoFloat64(op *token, left, right any) (float64, float64, *runtimeError) {
+	l, lok := toFloat64(left)
+	r, rok := toFloat64(right)
+
+	if !lok || !rok {
+		return 0, 0, &runtimeError{
+			tok:     op,
+			message: "operands must be two numbers",
+		}
+	}
+
+	return l, r, nil
+}
+
+// isTruthy defines language truthiness rules:
+// false values: nil, false, 0, ""
 func isTruthy(e any) bool {
-	if e == nil {
+	switch v := e.(type) {
+	case nil:
 		return false
+	case bool:
+		return v
+	case float64:
+		return v != 0
+	case int:
+		return v != 0
+	case int64:
+		return v != 0
+	case string:
+		return v != ""
+	default:
+		return true
 	}
-	if b, ok := e.(bool); ok {
-		return b
-	}
-
-	return false
 }
 
-func compareValues(a, b any) (int, bool) {
+// compareOperands compares two values if both are numbers or both are strings
+// returns: -1 (a < b), 0 (a == b), 1 (a > b)
+func compareOperands(a, b any, operator *token) (int, *runtimeError) {
 	// string compare
 	if l, ok := a.(string); ok {
 		if r, ok := b.(string); ok {
-			return strings.Compare(l, r), true
+			return strings.Compare(l, r), nil
+		}
+
+		return 0, &runtimeError{
+			tok:     operator,
+			message: "operands must be two strings",
 		}
 	}
 
 	// number compare
-	if l, ok := toFloat64(a); ok {
-		if r, ok := toFloat64(b); ok {
-			switch {
-			case l < r:
-				return -1, true
-			case l > r:
-				return 1, true
-			default:
-				return 0, true
-			}
+	l, r, err := asTwoFloat64(operator, a, b)
+	if err != nil {
+		return 0, err
+	}
+
+	switch {
+	case l < r:
+		return -1, nil
+	case l > r:
+		return 1, nil
+	default:
+		return 0, nil
+	}
+}
+
+// isEqual checks equality with numeric normalization + deep fallback
+func isEqual(a any, b any) bool {
+	// nil handling
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+
+	// numbers
+	if la, ok := toFloat64(a); ok {
+		if lb, ok := toFloat64(b); ok {
+			return la == lb
 		}
 	}
 
-	return 0, false
-}
-
-func isEqual(a any, b any) bool {
+	// fallback
 	return reflect.DeepEqual(a, b)
 }
