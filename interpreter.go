@@ -22,6 +22,7 @@ func (v *interpreter) Intepret(e expr) {
 	value, err := v.evaluate(e)
 	if err != nil {
 		// TODO: report runtime error
+		fmt.Println(err)
 	} else {
 		fmt.Println(value)
 	}

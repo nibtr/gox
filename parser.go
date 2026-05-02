@@ -42,7 +42,7 @@ func (p *parser) synchronize() {
 	p.advance()
 
 	for !p.isAtEnd() {
-		if t, _ := p.previous(); t.tokenType == SEMICOLON {
+		if t := p.previous(); t.tokenType == SEMICOLON {
 			return
 		}
 
@@ -105,7 +105,7 @@ func (p *parser) equality() (expr, error) {
 	}
 
 	for p.match(BANG_EQUAL, EQUAL_EQUAL) {
-		operator, _ := p.previous()
+		operator := p.previous()
 		right, err := p.comparison()
 
 		if err != nil {
@@ -129,7 +129,7 @@ func (p *parser) comparison() (expr, error) {
 	}
 
 	for p.match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL) {
-		operator, _ := p.previous()
+		operator := p.previous()
 		right, err := p.term()
 
 		if err != nil {
@@ -153,7 +153,7 @@ func (p *parser) term() (expr, error) {
 	}
 
 	for p.match(MINUS, PLUS) {
-		operator, _ := p.previous()
+		operator := p.previous()
 		right, err := p.factor()
 		if err != nil {
 			return nil, err
@@ -176,7 +176,7 @@ func (p *parser) factor() (expr, error) {
 	}
 
 	for p.match(SLASH, STAR) {
-		operator, _ := p.previous()
+		operator := p.previous()
 		right, err := p.unary()
 
 		if err != nil {
@@ -195,7 +195,7 @@ func (p *parser) factor() (expr, error) {
 
 func (p *parser) unary() (expr, error) {
 	if p.match(BANG, MINUS) {
-		operator, _ := p.previous()
+		operator := p.previous()
 		right, err := p.unary()
 
 		if err != nil {
@@ -222,7 +222,7 @@ func (p *parser) primary() (expr, error) {
 		return &literal{value: nil}, nil
 	}
 	if p.match(NUMBER, STRING) {
-		t, _ := p.previous()
+		t := p.previous()
 		return &literal{value: t.literal}, nil
 	}
 	if p.match(LEFT_PAREN) {
@@ -230,7 +230,9 @@ func (p *parser) primary() (expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		p.consume(RIGHT_PAREN, "expect ')' after expression.")
+		if _, err := p.consume(RIGHT_PAREN, "expect ')' after expression."); err != nil {
+			return nil, err
+		}
 		return &grouping{expr}, nil
 	}
 
@@ -264,7 +266,7 @@ func (p *parser) check(t tokenType) bool {
 
 // advance consumes the token at `current` and returns it,
 // then advances `current` to next token
-func (p *parser) advance() (*token, error) {
+func (p *parser) advance() *token {
 	if !p.isAtEnd() {
 		p.current++
 	}
@@ -283,14 +285,14 @@ func (p *parser) peek() *token {
 
 // previous returns the most recently consumed token,
 // which is the token just before the current position (current - 1).
-func (p *parser) previous() (*token, error) {
-	return &p.tokens[p.current-1], nil
+func (p *parser) previous() *token {
+	return &p.tokens[p.current-1]
 }
 
 // consume advances the current pointer if it's the same as `t`
 func (p *parser) consume(t tokenType, message string) (*token, error) {
 	if p.check(t) {
-		return p.advance()
+		return p.advance(), nil
 	}
 
 	return nil, p.error(p.peek(), message)
