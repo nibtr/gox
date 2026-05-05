@@ -55,7 +55,7 @@ func runPrompt() {
 		}
 
 		run(scanner.Text())
-		hadError = false // reset the error flag
+		// hadError = false // reset the error flag
 	}
 }
 

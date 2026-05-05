@@ -217,6 +217,8 @@ func isTruthy(e any) bool {
 // compareOperands compares two values if both are numbers or both are strings
 // returns: -1 (a < b), 0 (a == b), 1 (a > b)
 func compareOperands(a, b any, operator *token) (int, *RuntimeError) {
+	defaultErrMsg := "operands must be two strings or numbers"
+
 	// string compare
 	if l, ok := a.(string); ok {
 		if r, ok := b.(string); ok {
@@ -225,13 +227,14 @@ func compareOperands(a, b any, operator *token) (int, *RuntimeError) {
 
 		return 0, &RuntimeError{
 			tok:     operator,
-			message: "operands must be two strings",
+			message: defaultErrMsg,
 		}
 	}
 
 	// number compare
 	l, r, err := asTwoFloat64(operator, a, b)
 	if err != nil {
+		err.message = defaultErrMsg // override err message for clarity
 		return 0, err
 	}
 
