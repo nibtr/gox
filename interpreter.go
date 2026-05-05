@@ -6,6 +6,13 @@ import (
 	"strings"
 )
 
+const (
+	divisionByZeroErrMsg           = "division by zero"
+	operandsMustBeTwoNumbersErrMsg = "operands must be two numbers"
+	operandMustBeNumberErrMsg      = "operand must be a number"
+	operandsMustBeStrOrNumErrMsg   = "operands must be two strings or numbers"
+)
+
 type interpreter struct{}
 
 // RuntimeError represents a runtime evaluation error tied to a token.
@@ -67,7 +74,7 @@ func (v *interpreter) visitBinary(expr *binary) (any, error) {
 		if r == 0 {
 			return nil, &RuntimeError{
 				tok:     &expr.operator,
-				message: "division by zero",
+				message: divisionByZeroErrMsg,
 			}
 		}
 		return l / r, nil
@@ -80,13 +87,15 @@ func (v *interpreter) visitBinary(expr *binary) (any, error) {
 			}
 			return nil, &RuntimeError{
 				tok:     &expr.operator,
-				message: "operands must be two strings",
+				message: operandsMustBeStrOrNumErrMsg,
 			}
 		}
 
 		// otherwise treat as numeric addition
 		l, r, err := asTwoFloat64(&expr.operator, left, right)
 		if err != nil {
+			// override error for clarity
+			err.message = operandsMustBeStrOrNumErrMsg
 			return nil, err
 		}
 		return l + r, nil
@@ -172,7 +181,7 @@ func asFloat64(operator *token, operand any) (float64, *RuntimeError) {
 	if !ok {
 		return 0, &RuntimeError{
 			tok:     operator,
-			message: "operand must be a number",
+			message: operandMustBeNumberErrMsg,
 		}
 	}
 	return n, nil
@@ -186,7 +195,7 @@ func asTwoFloat64(op *token, left, right any) (float64, float64, *RuntimeError) 
 	if !lok || !rok {
 		return 0, 0, &RuntimeError{
 			tok:     op,
-			message: "operands must be two numbers",
+			message: operandsMustBeTwoNumbersErrMsg,
 		}
 	}
 
@@ -217,8 +226,6 @@ func isTruthy(e any) bool {
 // compareOperands compares two values if both are numbers or both are strings
 // returns: -1 (a < b), 0 (a == b), 1 (a > b)
 func compareOperands(a, b any, operator *token) (int, *RuntimeError) {
-	defaultErrMsg := "operands must be two strings or numbers"
-
 	// string compare
 	if l, ok := a.(string); ok {
 		if r, ok := b.(string); ok {
@@ -227,14 +234,14 @@ func compareOperands(a, b any, operator *token) (int, *RuntimeError) {
 
 		return 0, &RuntimeError{
 			tok:     operator,
-			message: defaultErrMsg,
+			message: operandsMustBeStrOrNumErrMsg,
 		}
 	}
 
 	// number compare
 	l, r, err := asTwoFloat64(operator, a, b)
 	if err != nil {
-		err.message = defaultErrMsg // override err message for clarity
+		err.message = operandsMustBeStrOrNumErrMsg // override err message for clarity
 		return 0, err
 	}
 
