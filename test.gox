@@ -1,3 +1,10 @@
+/*
+  This file is for testing different expression statements.
+  Currently limited supported.
+  Will add more in the future :)
+*/
+
+// This is a comment
 print 1 + 2 * 3 < 10 == !(false);
 
 print (1 + 2) * (3 + 4) == 21 ? 100 : 200;
@@ -8,7 +15,9 @@ print !(1 + 2 * 3 > 10 == false);
 
 ((1 + 2) * (3 - 4) / 5) == -1;
 
+// This is another comment
 print (
+    // This is a comment inside of a group
     (1 + 2 * 3) < (4 + 5)
 )
 == (
@@ -20,5 +29,6 @@ print false ? 1 + 2 * 3 : (4 + 5) * (6 - 2);
 print (
     true
         ? (1 + 2 * 3)
+        // This is a comment in between ternary
         : (4 / 2)
 ) == 7;
