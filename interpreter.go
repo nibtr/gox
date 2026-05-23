@@ -21,7 +21,7 @@ func NewInterpreter() *interpreter {
 
 // RuntimeError represents a runtime evaluation error tied to a token.
 type RuntimeError struct {
-	tok     *token
+	tok     *Token
 	message string
 }
 
@@ -41,7 +41,7 @@ func (v *interpreter) Intepret(statements []Stmt) error {
 
 // ------------ Expression section -------------------
 
-func (v *interpreter) visitTernary(expr *ternary) (any, error) {
+func (v *interpreter) visitTernary(expr *Ternary) (any, error) {
 	val, err := v.evaluate(expr.condition)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (v *interpreter) visitTernary(expr *ternary) (any, error) {
 	}
 }
 
-func (v *interpreter) visitBinary(expr *binary) (any, error) {
+func (v *interpreter) visitBinary(expr *Binary) (any, error) {
 	left, err := v.evaluate(expr.left)
 	if err != nil {
 		return nil, err
@@ -140,7 +140,7 @@ func (v *interpreter) visitBinary(expr *binary) (any, error) {
 	panic("unreachable")
 }
 
-func (v *interpreter) visitUnary(expr *unary) (any, error) {
+func (v *interpreter) visitUnary(expr *Unary) (any, error) {
 	right, err := v.evaluate(expr.right)
 	if err != nil {
 		return nil, err
@@ -160,11 +160,11 @@ func (v *interpreter) visitUnary(expr *unary) (any, error) {
 	panic("unreachable")
 }
 
-func (v *interpreter) visitGrouping(expr *grouping) (any, error) {
+func (v *interpreter) visitGrouping(expr *Grouping) (any, error) {
 	return v.evaluate(expr.expression)
 }
 
-func (v *interpreter) visitLiteral(expr *literal) (any, error) {
+func (v *interpreter) visitLiteral(expr *Literal) (any, error) {
 	return expr.value, nil
 }
 
@@ -191,8 +191,8 @@ func (v *interpreter) execute(stmt Stmt) (any, error) {
 }
 
 // evaluate dispatches AST node evaluation
-func (v *interpreter) evaluate(e expr) (any, error) {
-	return e.accept(v)
+func (v *interpreter) evaluate(e Expr) (any, error) {
+	return e.Accept(v)
 }
 
 // toFloat64 converts supported numeric types into float64
@@ -210,7 +210,7 @@ func toFloat64(v any) (float64, bool) {
 }
 
 // asFloat64 validates and converts a single operand (used for unary ops)
-func asFloat64(operator *token, operand any) (float64, *RuntimeError) {
+func asFloat64(operator *Token, operand any) (float64, *RuntimeError) {
 	n, ok := toFloat64(operand)
 	if !ok {
 		return 0, &RuntimeError{
@@ -222,7 +222,7 @@ func asFloat64(operator *token, operand any) (float64, *RuntimeError) {
 }
 
 // asTwoFloat64 validates and converts two operands (used for binary math ops)
-func asTwoFloat64(op *token, left, right any) (float64, float64, *RuntimeError) {
+func asTwoFloat64(op *Token, left, right any) (float64, float64, *RuntimeError) {
 	l, lok := toFloat64(left)
 	r, rok := toFloat64(right)
 
@@ -259,7 +259,7 @@ func isTruthy(e any) bool {
 
 // compareOperands compares two values if both are numbers or both are strings
 // returns: -1 (a < b), 0 (a == b), 1 (a > b)
-func compareOperands(a, b any, operator *token) (int, *RuntimeError) {
+func compareOperands(a, b any, operator *Token) (int, *RuntimeError) {
 	// string compare
 	if l, ok := a.(string); ok {
 		if r, ok := b.(string); ok {

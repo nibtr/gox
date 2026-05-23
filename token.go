@@ -2,16 +2,16 @@ package main
 
 import "fmt"
 
-type token struct {
+type Token struct {
 	tokenType tokenType
 	lexeme    string
 	literal   any
 	line      uint32
 }
 
-// newToken returns a new token instance
-func newToken(tokenType tokenType, lexeme string, literal any, line uint32) token {
-	return token{
+// NewToken returns a new token instance
+func NewToken(tokenType tokenType, lexeme string, literal any, line uint32) Token {
+	return Token{
 		tokenType: tokenType,
 		lexeme:    lexeme,
 		literal:   literal,
@@ -19,7 +19,7 @@ func newToken(tokenType tokenType, lexeme string, literal any, line uint32) toke
 	}
 }
 
-func (t token) String() string {
+func (t Token) String() string {
 	return fmt.Sprintf("%s %s %v", tokenName[t.tokenType], t.lexeme, t.literal)
 }
 

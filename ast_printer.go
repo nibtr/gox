@@ -6,8 +6,8 @@ import "fmt"
 
 type astPrinter struct{}
 
-func (v astPrinter) Print(e expr) (string, error) {
-	res, err := e.accept(v)
+func (v astPrinter) Print(e Expr) (string, error) {
+	res, err := e.Accept(v)
 	if err != nil {
 		return "", err
 	}
@@ -20,23 +20,23 @@ func (v astPrinter) Print(e expr) (string, error) {
 	return str, nil
 }
 
-func (v astPrinter) visitTernary(n *ternary) (any, error) {
+func (v astPrinter) visitTernary(n *Ternary) (any, error) {
 	return v.parenthesize("?:", n.condition, n.thenExpr, n.elseExpr)
 }
 
-func (v astPrinter) visitBinary(n *binary) (any, error) {
+func (v astPrinter) visitBinary(n *Binary) (any, error) {
 	return v.parenthesize(n.operator.lexeme, n.left, n.right)
 }
 
-func (v astPrinter) visitUnary(n *unary) (any, error) {
+func (v astPrinter) visitUnary(n *Unary) (any, error) {
 	return v.parenthesize(n.operator.lexeme, n.right)
 }
 
-func (v astPrinter) visitGrouping(n *grouping) (any, error) {
+func (v astPrinter) visitGrouping(n *Grouping) (any, error) {
 	return v.parenthesize("group", n.expression)
 }
 
-func (v astPrinter) visitLiteral(n *literal) (any, error) {
+func (v astPrinter) visitLiteral(n *Literal) (any, error) {
 	switch val := n.value.(type) {
 	case nil:
 		return "nil", nil
@@ -57,14 +57,14 @@ func (v astPrinter) visitLiteral(n *literal) (any, error) {
 	}
 }
 
-func (v astPrinter) parenthesize(name string, expressions ...expr) (string, error) {
+func (v astPrinter) parenthesize(name string, expressions ...Expr) (string, error) {
 	var s strings.Builder
 	s.WriteString("(" + name)
 
 	for _, e := range expressions {
 		s.WriteString(" ")
 
-		str, err := e.accept(v)
+		str, err := e.Accept(v)
 		if err != nil {
 			return "", err
 		}

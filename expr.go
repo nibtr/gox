@@ -2,62 +2,62 @@ package main
 
 type ExprVisitor interface {
 	// visitTernary evaluates condition ? thenExpr : elseExpr
-	visitTernary(n *ternary) (any, error)
+	visitTernary(n *Ternary) (any, error)
 	// visitBinary evaluates binary expressions like +, -, *, /, comparisons
-	visitBinary(n *binary) (any, error)
+	visitBinary(n *Binary) (any, error)
 	// visitUnary evaluates unary expressions like -x and !x
-	visitUnary(n *unary) (any, error)
+	visitUnary(n *Unary) (any, error)
 	// visitGrouping evaluates expressions inside parentheses (...)
-	visitGrouping(n *grouping) (any, error)
+	visitGrouping(n *Grouping) (any, error)
 	// visitLiteral returns a literal value directly
-	visitLiteral(n *literal) (any, error)
+	visitLiteral(n *Literal) (any, error)
 }
 
-type expr interface {
-	accept(v ExprVisitor) (any, error)
+type Expr interface {
+	Accept(v ExprVisitor) (any, error)
 }
 
-type ternary struct {
-	condition expr
-	thenExpr  expr
-	elseExpr  expr
+type Ternary struct {
+	condition Expr
+	thenExpr  Expr
+	elseExpr  Expr
 }
 
-type binary struct {
-	left     expr
-	operator token
-	right    expr
+type Binary struct {
+	left     Expr
+	operator Token
+	right    Expr
 }
 
-type unary struct {
-	operator token
-	right    expr
+type Unary struct {
+	operator Token
+	right    Expr
 }
 
-type grouping struct {
-	expression expr
+type Grouping struct {
+	expression Expr
 }
 
-type literal struct {
+type Literal struct {
 	value any
 }
 
-func (n *ternary) accept(v ExprVisitor) (any, error) {
+func (n *Ternary) Accept(v ExprVisitor) (any, error) {
 	return v.visitTernary(n)
 }
 
-func (n *binary) accept(v ExprVisitor) (any, error) {
+func (n *Binary) Accept(v ExprVisitor) (any, error) {
 	return v.visitBinary(n)
 }
 
-func (n *unary) accept(v ExprVisitor) (any, error) {
+func (n *Unary) Accept(v ExprVisitor) (any, error) {
 	return v.visitUnary(n)
 }
 
-func (n *grouping) accept(v ExprVisitor) (any, error) {
+func (n *Grouping) Accept(v ExprVisitor) (any, error) {
 	return v.visitGrouping(n)
 }
 
-func (n *literal) accept(v ExprVisitor) (any, error) {
+func (n *Literal) Accept(v ExprVisitor) (any, error) {
 	return v.visitLiteral(n)
 }

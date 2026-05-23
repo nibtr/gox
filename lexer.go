@@ -18,7 +18,7 @@ func (e *LexerError) Error() string {
 
 type lexer struct {
 	source string
-	tokens []token
+	tokens []Token
 
 	// points to 1st char currently being considered
 	start uint32
@@ -35,22 +35,22 @@ func NewLexer(source string) *lexer {
 		line:   1,
 
 		// just being explicit
-		tokens:  []token{},
+		tokens:  []Token{},
 		start:   0,
 		current: 0,
 	}
 }
 
 // scanTokens scans the source and extract the tokens
-func (l *lexer) scanTokens() ([]token, error) {
+func (l *lexer) scanTokens() ([]Token, error) {
 	for !l.isAtEnd() {
 		if err := l.scanToken(); err != nil {
-			return []token{}, err
+			return []Token{}, err
 		}
 	}
 
 	// add an EOF at the end of source
-	l.tokens = append(l.tokens, newToken(EOF, "", nil, l.line))
+	l.tokens = append(l.tokens, NewToken(EOF, "", nil, l.line))
 	return l.tokens, nil
 }
 
@@ -286,7 +286,7 @@ func (l *lexer) addToken(tokenType tokenType, literal ...any) {
 		panic("addToken: too many literal arguments")
 	}
 
-	l.tokens = append(l.tokens, newToken(tokenType, lexeme, value, l.line))
+	l.tokens = append(l.tokens, NewToken(tokenType, lexeme, value, l.line))
 }
 
 // isDigit checks if a character is a digit

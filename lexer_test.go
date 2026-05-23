@@ -7,15 +7,15 @@ import (
 func TestLexer(t *testing.T) {
 	tests := []struct {
 		input    string
-		expected []token
+		expected []Token
 	}{
 		{
 			input: `!=;; // this is a comment`,
-			expected: []token{
-				newToken(BANG_EQUAL, "!=", nil, 1),
-				newToken(SEMICOLON, ";", nil, 1),
-				newToken(SEMICOLON, ";", nil, 1),
-				newToken(EOF, "", nil, 1),
+			expected: []Token{
+				NewToken(BANG_EQUAL, "!=", nil, 1),
+				NewToken(SEMICOLON, ";", nil, 1),
+				NewToken(SEMICOLON, ";", nil, 1),
+				NewToken(EOF, "", nil, 1),
 			},
 		},
 		{
@@ -25,42 +25,42 @@ func TestLexer(t *testing.T) {
 +<=>=<>
 
 (( )) {}`,
-			expected: []token{
-				newToken(BANG_EQUAL, "!=", nil, 1),
-				newToken(SEMICOLON, ";", nil, 1),
-				newToken(SEMICOLON, ";", nil, 1),
+			expected: []Token{
+				NewToken(BANG_EQUAL, "!=", nil, 1),
+				NewToken(SEMICOLON, ";", nil, 1),
+				NewToken(SEMICOLON, ";", nil, 1),
 
-				newToken(PLUS, "+", nil, 4),
-				newToken(LESS_EQUAL, "<=", nil, 4),
-				newToken(GREATER_EQUAL, ">=", nil, 4),
-				newToken(LESS, "<", nil, 4),
-				newToken(GREATER, ">", nil, 4),
+				NewToken(PLUS, "+", nil, 4),
+				NewToken(LESS_EQUAL, "<=", nil, 4),
+				NewToken(GREATER_EQUAL, ">=", nil, 4),
+				NewToken(LESS, "<", nil, 4),
+				NewToken(GREATER, ">", nil, 4),
 
-				newToken(LEFT_PAREN, "(", nil, 6),
-				newToken(LEFT_PAREN, "(", nil, 6),
-				newToken(RIGHT_PAREN, ")", nil, 6),
-				newToken(RIGHT_PAREN, ")", nil, 6),
-				newToken(LEFT_BRACE, "{", nil, 6),
-				newToken(RIGHT_BRACE, "}", nil, 6),
+				NewToken(LEFT_PAREN, "(", nil, 6),
+				NewToken(LEFT_PAREN, "(", nil, 6),
+				NewToken(RIGHT_PAREN, ")", nil, 6),
+				NewToken(RIGHT_PAREN, ")", nil, 6),
+				NewToken(LEFT_BRACE, "{", nil, 6),
+				NewToken(RIGHT_BRACE, "}", nil, 6),
 
-				newToken(EOF, "", nil, 6),
+				NewToken(EOF, "", nil, 6),
 			},
 		},
 		{
 			input: `"This is a string"`,
-			expected: []token{
-				newToken(STRING, `"This is a string"`, "This is a string", 1),
-				newToken(EOF, "", nil, 1),
+			expected: []Token{
+				NewToken(STRING, `"This is a string"`, "This is a string", 1),
+				NewToken(EOF, "", nil, 1),
 			},
 		},
 		{
 			input: `12.5 + 6.9;`,
-			expected: []token{
-				newToken(NUMBER, "12.5", 12.5, 1),
-				newToken(PLUS, "+", nil, 1),
-				newToken(NUMBER, "6.9", 6.9, 1),
-				newToken(SEMICOLON, ";", nil, 1),
-				newToken(EOF, "", nil, 1),
+			expected: []Token{
+				NewToken(NUMBER, "12.5", 12.5, 1),
+				NewToken(PLUS, "+", nil, 1),
+				NewToken(NUMBER, "6.9", 6.9, 1),
+				NewToken(SEMICOLON, ";", nil, 1),
+				NewToken(EOF, "", nil, 1),
 			},
 		},
 		{
@@ -69,10 +69,10 @@ func disabled() {}
 */
 
 "hello world";`,
-			expected: []token{
-				newToken(STRING, `"hello world"`, "hello world", 5),
-				newToken(SEMICOLON, ";", nil, 5),
-				newToken(EOF, "", nil, 5),
+			expected: []Token{
+				NewToken(STRING, `"hello world"`, "hello world", 5),
+				NewToken(SEMICOLON, ";", nil, 5),
+				NewToken(EOF, "", nil, 5),
 			},
 		},
 	}

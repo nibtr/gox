@@ -5,13 +5,13 @@ import (
 )
 
 func TestAstPrinter(t *testing.T) {
-	ex := &binary{
-		left: &unary{
-			operator: newToken(MINUS, "-", nil, 1),
-			right:    &literal{value: 123},
+	ex := &Binary{
+		left: &Unary{
+			operator: NewToken(MINUS, "-", nil, 1),
+			right:    &Literal{value: 123},
 		},
-		operator: newToken(STAR, "*", nil, 1),
-		right:    &grouping{expression: &literal{45.67}},
+		operator: NewToken(STAR, "*", nil, 1),
+		right:    &Grouping{expression: &Literal{45.67}},
 	}
 
 	printer := astPrinter{}
