@@ -51,11 +51,11 @@ run ./...`. I will refactor to packages later.
 ```
 go run ./... # run the repl
 
-> 1 * (2 + 3) # 5
+> print 1 * (2 + 3); # 5 
 
 # or with files
 
-go run ./... <file.gox> # still work in progress
+go run ./... <file.gox>
 ```
 
 ## Grammar
