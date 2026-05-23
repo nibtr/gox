@@ -28,8 +28,8 @@ type lexer struct {
 	line uint32
 }
 
-// newLexer returns a new instance of lexer
-func newLexer(source string) *lexer {
+// NewLexer returns a new instance of lexer
+func NewLexer(source string) *lexer {
 	return &lexer{
 		source: source,
 		line:   1,

@@ -33,8 +33,51 @@ func NewParser(tokens []token) *parser {
 	}
 }
 
-func (p *parser) Parse() (expr expr, err error) {
-	return p.expression()
+func (p *parser) Parse() ([]Stmt, error) {
+	statements := []Stmt{}
+	for !p.isAtEnd() {
+		stmt, err := p.statement()
+		if err != nil {
+			return nil, err
+		}
+		statements = append(statements, stmt)
+	}
+
+	return statements, nil
+}
+
+func (p *parser) statement() (Stmt, error) {
+	if p.match(PRINT) {
+		return p.printStatement()
+	}
+	return p.expressionStatement()
+}
+
+func (p *parser) printStatement() (Stmt, error) {
+	value, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+	_, err = p.consume(SEMICOLON, "expect ';' after value.")
+	if err != nil {
+		return nil, err
+	}
+
+	return &PrintStmt{Expression: value}, nil
+}
+
+func (p *parser) expressionStatement() (Stmt, error) {
+	e, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+
+	p.consume(SEMICOLON, "expect ';' after expression.")
+	if err != nil {
+		return nil, err
+	}
+
+	return &ExpressionStmt{Expression: e}, nil
 }
 
 // TODO: remember to synchronize errors

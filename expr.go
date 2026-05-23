@@ -1,6 +1,6 @@
 package main
 
-type visitor interface {
+type ExprVisitor interface {
 	// visitTernary evaluates condition ? thenExpr : elseExpr
 	visitTernary(n *ternary) (any, error)
 	// visitBinary evaluates binary expressions like +, -, *, /, comparisons
@@ -14,7 +14,7 @@ type visitor interface {
 }
 
 type expr interface {
-	accept(v visitor) (any, error)
+	accept(v ExprVisitor) (any, error)
 }
 
 type ternary struct {
@@ -42,22 +42,22 @@ type literal struct {
 	value any
 }
 
-func (n *ternary) accept(v visitor) (any, error) {
+func (n *ternary) accept(v ExprVisitor) (any, error) {
 	return v.visitTernary(n)
 }
 
-func (n *binary) accept(v visitor) (any, error) {
+func (n *binary) accept(v ExprVisitor) (any, error) {
 	return v.visitBinary(n)
 }
 
-func (n *unary) accept(v visitor) (any, error) {
+func (n *unary) accept(v ExprVisitor) (any, error) {
 	return v.visitUnary(n)
 }
 
-func (n *grouping) accept(v visitor) (any, error) {
+func (n *grouping) accept(v ExprVisitor) (any, error) {
 	return v.visitGrouping(n)
 }
 
-func (n *literal) accept(v visitor) (any, error) {
+func (n *literal) accept(v ExprVisitor) (any, error) {
 	return v.visitLiteral(n)
 }

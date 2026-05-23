@@ -61,7 +61,7 @@ func runPrompt() {
 
 // run executes the interpreter for a source
 func run(source string) error {
-	l := newLexer(source)
+	l := NewLexer(source)
 	tokens, err := l.scanTokens()
 	if err != nil {
 		fmt.Printf("%v\n", err)
@@ -69,20 +69,19 @@ func run(source string) error {
 	}
 
 	parser := NewParser(tokens)
-	expr, err := parser.Parse()
+	statements, err := parser.Parse()
 	if err != nil {
 		fmt.Printf("%v\n", err)
 		return err
 	}
 
 	// fmt.Println(astPrinter{}.Print(expr))
-	intrp := interpreter{}
-	value, err := intrp.Intepret(expr)
+	intrp := NewInterpreter()
+	err = intrp.Intepret(statements)
 	if err != nil {
 		fmt.Printf("%v\n", err)
 		return err
 	}
-	fmt.Println(value)
 
 	return nil
 }

@@ -15,6 +15,10 @@ const (
 
 type interpreter struct{}
 
+func NewInterpreter() *interpreter {
+	return &interpreter{}
+}
+
 // RuntimeError represents a runtime evaluation error tied to a token.
 type RuntimeError struct {
 	tok     *token
@@ -25,9 +29,17 @@ func (e *RuntimeError) Error() string {
 	return fmt.Sprintf("error at '%s': %s\n", e.tok.lexeme, e.message)
 }
 
-func (v *interpreter) Intepret(e expr) (any, error) {
-	return v.evaluate(e)
+func (v *interpreter) Intepret(statements []Stmt) error {
+	for _, s := range statements {
+		_, err := v.execute(s)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
+
+// ------------ Expression section -------------------
 
 func (v *interpreter) visitTernary(expr *ternary) (any, error) {
 	val, err := v.evaluate(expr.condition)
@@ -154,6 +166,28 @@ func (v *interpreter) visitGrouping(expr *grouping) (any, error) {
 
 func (v *interpreter) visitLiteral(expr *literal) (any, error) {
 	return expr.value, nil
+}
+
+// ----------- Statement section -------------------
+
+func (v *interpreter) visitExpressionStmt(stmt *ExpressionStmt) (any, error) {
+	return v.evaluate(stmt.Expression)
+}
+
+func (v *interpreter) visitPrintStmt(stmt *PrintStmt) error {
+	value, err := v.evaluate(stmt.Expression)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(value)
+	return nil
+}
+
+// ------------------- Helpers ---------------------
+
+func (v *interpreter) execute(stmt Stmt) (any, error) {
+	return stmt.Accept(v)
 }
 
 // evaluate dispatches AST node evaluation

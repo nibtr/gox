@@ -79,7 +79,7 @@ func disabled() {}
 
 	for _, test := range tests {
 		t.Run("Lexing", func(t *testing.T) {
-			l := newLexer(test.input)
+			l := NewLexer(test.input)
 			tokens, err := l.scanTokens()
 			if err != nil {
 				t.Errorf("%v", err)
