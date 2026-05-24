@@ -11,7 +11,7 @@ type ExprVisitor interface {
 	visitGrouping(n *Grouping) (any, error)
 	// visitLiteral returns a literal value directly
 	visitLiteral(n *Literal) (any, error)
-	// visitVariable evaluates variable declaration
+	// visitVariable evaluates variable expressions (identifier lookup)
 	visitVariable(n *Variable) (any, error)
 }
 

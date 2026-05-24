@@ -36,39 +36,46 @@ func NewParser(tokens []Token) *parser {
 func (p *parser) Parse() ([]Stmt, error) {
 	statements := []Stmt{}
 	for !p.isAtEnd() {
-		stmt := p.declaration()
-
-		// TODO: declaration returns nil so we need to skip nil
-		// reverify if this check is necessary
-		if stmt != nil {
-			statements = append(statements, stmt)
+		stmt, err := p.declaration()
+		if err != nil {
+			return nil, err
 		}
+
+		statements = append(statements, stmt)
 	}
 
 	return statements, nil
 }
 
-func (p *parser) declaration() Stmt {
-	// TODO: check on how to report error in case error in declaration
+func (p *parser) declaration() (Stmt, error) {
+	// TODO: decide parser error strategy:
+	// 1: fail-fast (current):
+	//   - return err immediately and DO NOT call p.synchronize()
+	//   - simplifies design, single error per run, no partial AST execution
+	//
+	// 2: recovering parser:
+	//   - call p.synchronize()
+	//   - continue parsing after errors
+	//   - requires returning aggregated errors
 	if p.match(VAR) {
 		v, err := p.varDeclaration()
 		if err != nil {
-			p.synchronize()
-			return nil
+			// p.synchronize()
+			return nil, err
 		}
-		return v
+		return v, nil
 	}
 
 	v, err := p.statement()
 	if err != nil {
-		p.synchronize()
-		return nil
+		// p.synchronize()
+		return nil, err
 	}
-	return v
+	return v, nil
 }
 
 func (p *parser) varDeclaration() (Stmt, error) {
-	name, err := p.consume(IDENTIFIER, "Expect variable name")
+	name, err := p.consume(IDENTIFIER, "expect variable name.")
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +90,7 @@ func (p *parser) varDeclaration() (Stmt, error) {
 		initializer = v
 	}
 
-	_, err = p.consume(SEMICOLON, "Expect ';' after variable declaration")
+	_, err = p.consume(SEMICOLON, "expect ';' after variable declaration.")
 	if err != nil {
 		return nil, err
 	}

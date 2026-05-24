@@ -64,7 +64,7 @@ primary    -> NUMBER | STRING | "true" | "false" | "nil"
 ## Statements
 
 ```
-program     -> statement* EOF ;
+program     -> declaration* EOF ;
 
 declaration -> varDecl
              | statement ;
