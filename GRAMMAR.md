@@ -1,6 +1,6 @@
-## Grammar
+# Grammar
 
-### Some basics
+## Some basics
 
 Backus-Naur form (BNF):
 
@@ -13,7 +13,7 @@ For the notation (simplified):
 rule_name -> <sequence_of_symbols> ;
 ```
 
-### Expressions
+## Expressions
 
 - Literals: numbers, strings, booleans, nil
 - Unary expressions: a prefix ! to perform a logical not, and - to negate a
@@ -57,16 +57,23 @@ unary      -> ( "!" | "-" ) unary
               | primary ;
 
 primary    -> NUMBER | STRING | "true" | "false" | "nil"
-              | "(" expression ")" ;
+              | "(" expression ")"
+              | IDENTIFIER ;
 ```
 
-### Statements
+## Statements
 
 ```
-program   -> statement* EOF ;
-statement -> exprStmt
+program     -> statement* EOF ;
+
+declaration -> varDecl
+             | statement ;
+
+varDecl     -> "var" IDENTIFIER ( "=" expression )? ";" ;
+
+statement   -> exprStmt
              | printStmt ;
 
-exprStmt  -> expression ";" ;
-printStmt -> print expression ";" ;
+exprStmt    -> expression ";" ;
+printStmt   -> print expression ";" ;
 ```
