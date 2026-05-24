@@ -6,6 +6,10 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+
+	"github.com/nibtr/gox/lexer"
+	"github.com/nibtr/gox/parser"
+	"github.com/nibtr/gox/runtime"
 )
 
 // runFile runs the interpreter for the file at `path`
@@ -16,9 +20,9 @@ func runFile(path string) {
 	}
 
 	err = run(string(bytes))
-	var le *LexerError
-	var pe *ParseError
-	var re *RuntimeError
+	var le *lexer.LexerError
+	var pe *parser.ParseError
+	var re *runtime.RuntimeError
 
 	if errors.As(err, &le) {
 		os.Exit(65)
@@ -61,14 +65,14 @@ func runPrompt() {
 
 // run executes the interpreter for a source
 func run(source string) error {
-	l := NewLexer(source)
-	tokens, err := l.scanTokens()
+	l := lexer.NewLexer(source)
+	tokens, err := l.ScanTokens()
 	if err != nil {
 		fmt.Printf("%v\n", err)
 		return err
 	}
 
-	parser := NewParser(tokens)
+	parser := parser.NewParser(tokens)
 	statements, err := parser.Parse()
 	if err != nil {
 		fmt.Printf("%v\n", err)
@@ -76,7 +80,7 @@ func run(source string) error {
 	}
 
 	// fmt.Println(astPrinter{}.Print(expr))
-	intrp := NewInterpreter()
+	intrp := runtime.NewInterpreter()
 	err = intrp.Intepret(statements)
 	if err != nil {
 		fmt.Printf("%v\n", err)

@@ -1,34 +1,34 @@
-package main
+package lexer
 
 import "fmt"
 
 type Token struct {
-	tokenType tokenType
-	lexeme    string
-	literal   any
-	line      uint32
+	TokenType TokenType
+	Lexeme    string
+	Literal   any
+	Line      uint32
 }
 
 // NewToken returns a new token instance
-func NewToken(tokenType tokenType, lexeme string, literal any, line uint32) Token {
+func NewToken(tokenType TokenType, lexeme string, literal any, line uint32) Token {
 	return Token{
-		tokenType: tokenType,
-		lexeme:    lexeme,
-		literal:   literal,
-		line:      line,
+		TokenType: tokenType,
+		Lexeme:    lexeme,
+		Literal:   literal,
+		Line:      line,
 	}
 }
 
 func (t Token) String() string {
-	return fmt.Sprintf("%s %s %v", tokenName[t.tokenType], t.lexeme, t.literal)
+	return fmt.Sprintf("%s %s %v", tokenName[t.TokenType], t.Lexeme, t.Literal)
 }
 
-// tokenType enum
-type tokenType int
+// TokenType enum
+type TokenType int
 
 const (
 	// single character
-	LEFT_PAREN tokenType = iota
+	LEFT_PAREN TokenType = iota
 	RIGHT_PAREN
 	LEFT_BRACE
 	RIGHT_BRACE
@@ -78,7 +78,7 @@ const (
 	EOF
 )
 
-var tokenName = map[tokenType]string{
+var tokenName = map[TokenType]string{
 	LEFT_PAREN:  "LEFT_PAREN",
 	RIGHT_PAREN: "RIGHT_PAREN",
 	LEFT_BRACE:  "LEFT_BRACE",
@@ -126,7 +126,7 @@ var tokenName = map[tokenType]string{
 	EOF: "EOF",
 }
 
-var keywords = map[string]tokenType{
+var keywords = map[string]TokenType{
 	"and":    AND,
 	"class":  CLASS,
 	"else":   ELSE,

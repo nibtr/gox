@@ -1,13 +1,17 @@
-package main
+package ast
+
+import (
+	"github.com/nibtr/gox/lexer"
+)
 
 type Stmt interface {
 	Accept(visitor StmtVisitor) (any, error)
 }
 
 type StmtVisitor interface {
-	visitExpressionStmt(stmt *ExpressionStmt) (any, error)
-	visitPrintStmt(stmt *PrintStmt) error
-	visitVarStmt(stmt *VarStmt) error
+	VisitExpressionStmt(stmt *ExpressionStmt) (any, error)
+	VisitPrintStmt(stmt *PrintStmt) error
+	VisitVarStmt(stmt *VarStmt) error
 }
 
 type ExpressionStmt struct {
@@ -19,20 +23,20 @@ type PrintStmt struct {
 }
 
 type VarStmt struct {
-	name        Token
-	initializer Expr
+	Name        lexer.Token
+	Initializer Expr
 }
 
 func (s *ExpressionStmt) Accept(v StmtVisitor) (any, error) {
-	return v.visitExpressionStmt(s)
+	return v.VisitExpressionStmt(s)
 }
 
 func (s *PrintStmt) Accept(v StmtVisitor) (any, error) {
-	err := v.visitPrintStmt(s)
+	err := v.VisitPrintStmt(s)
 	return nil, err
 }
 
 func (s *VarStmt) Accept(v StmtVisitor) (any, error) {
-	err := v.visitVarStmt(s)
+	err := v.VisitVarStmt(s)
 	return nil, err
 }

@@ -1,6 +1,10 @@
-package main
+package runtime
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/nibtr/gox/lexer"
+)
 
 type Environment struct {
 	values map[string]any
@@ -16,13 +20,13 @@ func (e *Environment) define(name string, value any) {
 	e.values[name] = value
 }
 
-func (e *Environment) get(name Token) (any, error) {
-	v, ok := e.values[name.lexeme]
+func (e *Environment) get(name lexer.Token) (any, error) {
+	v, ok := e.values[name.Lexeme]
 	if ok {
 		return v, nil
 	}
 	return nil, &RuntimeError{
-		tok:     &name,
-		message: fmt.Sprintf("Undefined variable '%s'.", name.lexeme),
+		Token:   &name,
+		Message: fmt.Sprintf("Undefined variable '%s'.", name.Lexeme),
 	}
 }
