@@ -39,23 +39,23 @@ simple enough to learn.
 
 ## Process
 
-<source_code> -> lexing -> <tokens> -> parsing -> <syntax_tree>(currently here) -> static
+<source_code> -> lexing -> <tokens> -> parsing -> <syntax_tree> -> static
 analysis -> <intermediate_representation> -> optimize -> code gen
 (native or bytecode)
 
 ## Run
 
-You can build to binary first by `go build -o bin/gox`, or can just run with `go
-run ./...`. I will refactor to packages later.
+You can build to binary first by `go build -o bin/gox`, or can just run
+with `go run main.go`. 
 
 ```
-go run ./... # run the repl
+go run main.go # run the repl
 
 > print 1 * (2 + 3); # 5 
 
 # or with files
 
-go run ./... <file.gox>
+go run main.go <file.gox>
 ```
 
 ## Grammar
