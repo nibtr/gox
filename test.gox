@@ -32,3 +32,7 @@ print (
         // This is a comment in between ternary
         : (4 / 2)
 ) == 7;
+
+var a = "6";
+var b = "9";
+print a + b == "69" ? "sixty-nine" : "your mom" ;

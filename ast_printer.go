@@ -57,6 +57,10 @@ func (v astPrinter) visitLiteral(n *Literal) (any, error) {
 	}
 }
 
+func (v astPrinter) visitVariable(n *Variable) (any, error) {
+	return n.name.lexeme, nil
+}
+
 func (v astPrinter) parenthesize(name string, expressions ...Expr) (string, error) {
 	var s strings.Builder
 	s.WriteString("(" + name)

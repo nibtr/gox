@@ -36,14 +36,59 @@ func NewParser(tokens []Token) *parser {
 func (p *parser) Parse() ([]Stmt, error) {
 	statements := []Stmt{}
 	for !p.isAtEnd() {
-		stmt, err := p.statement()
-		if err != nil {
-			return nil, err
+		stmt := p.declaration()
+
+		// TODO: declaration returns nil so we need to skip nil
+		// reverify if this check is necessary
+		if stmt != nil {
+			statements = append(statements, stmt)
 		}
-		statements = append(statements, stmt)
 	}
 
 	return statements, nil
+}
+
+func (p *parser) declaration() Stmt {
+	// TODO: check on how to report error in case error in declaration
+	if p.match(VAR) {
+		v, err := p.varDeclaration()
+		if err != nil {
+			p.synchronize()
+			return nil
+		}
+		return v
+	}
+
+	v, err := p.statement()
+	if err != nil {
+		p.synchronize()
+		return nil
+	}
+	return v
+}
+
+func (p *parser) varDeclaration() (Stmt, error) {
+	name, err := p.consume(IDENTIFIER, "Expect variable name")
+	if err != nil {
+		return nil, err
+	}
+
+	var initializer Expr
+
+	if p.match(EQUAL) {
+		v, err := p.expression()
+		if err != nil {
+			return nil, err
+		}
+		initializer = v
+	}
+
+	_, err = p.consume(SEMICOLON, "Expect ';' after variable declaration")
+	if err != nil {
+		return nil, err
+	}
+
+	return &VarStmt{name: *name, initializer: initializer}, nil
 }
 
 func (p *parser) statement() (Stmt, error) {
@@ -267,6 +312,9 @@ func (p *parser) primary() (Expr, error) {
 	if p.match(NUMBER, STRING) {
 		t := p.previous()
 		return &Literal{value: t.literal}, nil
+	}
+	if p.match(IDENTIFIER) {
+		return &Variable{name: *p.previous()}, nil
 	}
 	if p.match(LEFT_PAREN) {
 		expr, err := p.expression()
