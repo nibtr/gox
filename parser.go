@@ -36,14 +36,66 @@ func NewParser(tokens []Token) *parser {
 func (p *parser) Parse() ([]Stmt, error) {
 	statements := []Stmt{}
 	for !p.isAtEnd() {
-		stmt, err := p.statement()
+		stmt, err := p.declaration()
 		if err != nil {
 			return nil, err
 		}
+
 		statements = append(statements, stmt)
 	}
 
 	return statements, nil
+}
+
+func (p *parser) declaration() (Stmt, error) {
+	// TODO: decide parser error strategy:
+	// 1: fail-fast (current):
+	//   - return err immediately and DO NOT call p.synchronize()
+	//   - simplifies design, single error per run, no partial AST execution
+	//
+	// 2: recovering parser:
+	//   - call p.synchronize()
+	//   - continue parsing after errors
+	//   - requires returning aggregated errors
+	if p.match(VAR) {
+		v, err := p.varDeclaration()
+		if err != nil {
+			// p.synchronize()
+			return nil, err
+		}
+		return v, nil
+	}
+
+	v, err := p.statement()
+	if err != nil {
+		// p.synchronize()
+		return nil, err
+	}
+	return v, nil
+}
+
+func (p *parser) varDeclaration() (Stmt, error) {
+	name, err := p.consume(IDENTIFIER, "expect variable name.")
+	if err != nil {
+		return nil, err
+	}
+
+	var initializer Expr
+
+	if p.match(EQUAL) {
+		v, err := p.expression()
+		if err != nil {
+			return nil, err
+		}
+		initializer = v
+	}
+
+	_, err = p.consume(SEMICOLON, "expect ';' after variable declaration.")
+	if err != nil {
+		return nil, err
+	}
+
+	return &VarStmt{name: *name, initializer: initializer}, nil
 }
 
 func (p *parser) statement() (Stmt, error) {
@@ -267,6 +319,9 @@ func (p *parser) primary() (Expr, error) {
 	if p.match(NUMBER, STRING) {
 		t := p.previous()
 		return &Literal{value: t.literal}, nil
+	}
+	if p.match(IDENTIFIER) {
+		return &Variable{name: *p.previous()}, nil
 	}
 	if p.match(LEFT_PAREN) {
 		expr, err := p.expression()

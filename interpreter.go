@@ -13,10 +13,14 @@ const (
 	operandsMustBeStrOrNumErrMsg   = "operands must be two strings or numbers"
 )
 
-type interpreter struct{}
+type interpreter struct {
+	environment *Environment
+}
 
 func NewInterpreter() *interpreter {
-	return &interpreter{}
+	return &interpreter{
+		environment: NewEnvironment(),
+	}
 }
 
 // RuntimeError represents a runtime evaluation error tied to a token.
@@ -168,7 +172,25 @@ func (v *interpreter) visitLiteral(expr *Literal) (any, error) {
 	return expr.value, nil
 }
 
+func (v *interpreter) visitVariable(expr *Variable) (any, error) {
+	return v.environment.get(expr.name)
+}
+
 // ----------- Statement section -------------------
+
+func (v *interpreter) visitVarStmt(stmt *VarStmt) error {
+	var value any
+	if stmt.initializer != nil {
+		v, err := v.evaluate(stmt.initializer)
+		if err != nil {
+			return err
+		}
+		value = v
+	}
+
+	v.environment.define(stmt.name.lexeme, value)
+	return nil
+}
 
 func (v *interpreter) visitExpressionStmt(stmt *ExpressionStmt) (any, error) {
 	return v.evaluate(stmt.Expression)

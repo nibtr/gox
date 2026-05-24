@@ -11,6 +11,8 @@ type ExprVisitor interface {
 	visitGrouping(n *Grouping) (any, error)
 	// visitLiteral returns a literal value directly
 	visitLiteral(n *Literal) (any, error)
+	// visitVariable evaluates variable expressions (identifier lookup)
+	visitVariable(n *Variable) (any, error)
 }
 
 type Expr interface {
@@ -42,6 +44,10 @@ type Literal struct {
 	value any
 }
 
+type Variable struct {
+	name Token
+}
+
 func (n *Ternary) Accept(v ExprVisitor) (any, error) {
 	return v.visitTernary(n)
 }
@@ -60,4 +66,8 @@ func (n *Grouping) Accept(v ExprVisitor) (any, error) {
 
 func (n *Literal) Accept(v ExprVisitor) (any, error) {
 	return v.visitLiteral(n)
+}
+
+func (n *Variable) Accept(v ExprVisitor) (any, error) {
+	return v.visitVariable(n)
 }
