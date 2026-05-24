@@ -1,9 +1,12 @@
-package main
+package runtime
 
 import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/nibtr/gox/ast"
+	"github.com/nibtr/gox/lexer"
 )
 
 const (
@@ -25,15 +28,15 @@ func NewInterpreter() *interpreter {
 
 // RuntimeError represents a runtime evaluation error tied to a token.
 type RuntimeError struct {
-	tok     *Token
-	message string
+	Token   *lexer.Token
+	Message string
 }
 
 func (e *RuntimeError) Error() string {
-	return fmt.Sprintf("error at '%s': %s\n", e.tok.lexeme, e.message)
+	return fmt.Sprintf("error at '%s': %s\n", e.Token.Lexeme, e.Message)
 }
 
-func (v *interpreter) Intepret(statements []Stmt) error {
+func (v *interpreter) Intepret(statements []ast.Stmt) error {
 	for _, s := range statements {
 		_, err := v.execute(s)
 		if err != nil {
@@ -45,98 +48,98 @@ func (v *interpreter) Intepret(statements []Stmt) error {
 
 // ------------ Expression section -------------------
 
-func (v *interpreter) visitTernary(expr *Ternary) (any, error) {
-	val, err := v.evaluate(expr.condition)
+func (v *interpreter) VisitTernary(expr *ast.Ternary) (any, error) {
+	val, err := v.evaluate(expr.Condition)
 	if err != nil {
 		return nil, err
 	}
 	if isTruthy(val) {
-		return v.evaluate(expr.thenExpr)
+		return v.evaluate(expr.ThenExpr)
 	} else {
-		return v.evaluate(expr.elseExpr)
+		return v.evaluate(expr.ElseExpr)
 	}
 }
 
-func (v *interpreter) visitBinary(expr *Binary) (any, error) {
-	left, err := v.evaluate(expr.left)
+func (v *interpreter) VisitBinary(expr *ast.Binary) (any, error) {
+	left, err := v.evaluate(expr.Left)
 	if err != nil {
 		return nil, err
 	}
-	right, err := v.evaluate(expr.right)
+	right, err := v.evaluate(expr.Right)
 	if err != nil {
 		return nil, err
 	}
 
-	switch expr.operator.tokenType {
-	case MINUS:
-		l, r, err := asTwoFloat64(&expr.operator, left, right)
+	switch expr.Operator.TokenType {
+	case lexer.MINUS:
+		l, r, err := asTwoFloat64(&expr.Operator, left, right)
 		if err != nil {
 			return nil, err
 		}
 		return l - r, nil
 
-	case STAR:
-		l, r, err := asTwoFloat64(&expr.operator, left, right)
+	case lexer.STAR:
+		l, r, err := asTwoFloat64(&expr.Operator, left, right)
 		if err != nil {
 			return nil, err
 		}
 		return l * r, nil
 
-	case SLASH:
-		l, r, err := asTwoFloat64(&expr.operator, left, right)
+	case lexer.SLASH:
+		l, r, err := asTwoFloat64(&expr.Operator, left, right)
 		if err != nil {
 			return nil, err
 		}
 		if r == 0 {
 			return nil, &RuntimeError{
-				tok:     &expr.operator,
-				message: divisionByZeroErrMsg,
+				Token:   &expr.Operator,
+				Message: divisionByZeroErrMsg,
 			}
 		}
 		return l / r, nil
 
-	case PLUS:
+	case lexer.PLUS:
 		// string concatenation only allowed if both operands are strings
 		if l, ok := left.(string); ok {
 			if r, ok := right.(string); ok {
 				return l + r, nil
 			}
 			return nil, &RuntimeError{
-				tok:     &expr.operator,
-				message: operandsMustBeStrOrNumErrMsg,
+				Token:   &expr.Operator,
+				Message: operandsMustBeStrOrNumErrMsg,
 			}
 		}
 
 		// otherwise treat as numeric addition
-		l, r, err := asTwoFloat64(&expr.operator, left, right)
+		l, r, err := asTwoFloat64(&expr.Operator, left, right)
 		if err != nil {
 			// override error for clarity
-			err.message = operandsMustBeStrOrNumErrMsg
+			err.Message = operandsMustBeStrOrNumErrMsg
 			return nil, err
 		}
 		return l + r, nil
 
-	case GREATER, GREATER_EQUAL, LESS, LESS_EQUAL:
-		res, err := compareOperands(left, right, &expr.operator)
+	case lexer.GREATER, lexer.GREATER_EQUAL, lexer.LESS, lexer.LESS_EQUAL:
+		res, err := compareOperands(left, right, &expr.Operator)
 		if err != nil {
 			return nil, err
 		}
 
-		switch expr.operator.tokenType {
-		case GREATER:
+		switch expr.Operator.TokenType {
+		case lexer.GREATER:
 			return res > 0, nil
-		case GREATER_EQUAL:
+		case lexer.GREATER_EQUAL:
 			return res >= 0, nil
-		case LESS:
+		case lexer.LESS:
 			return res < 0, nil
-		case LESS_EQUAL:
+		case lexer.LESS_EQUAL:
 			return res <= 0, nil
 		}
 
-	case BANG_EQUAL:
+	case lexer.BANG_EQUAL:
 		// TODO: currently using deepEqual. Maybe we limit to compare only string & number ?
 		return !isEqual(left, right), nil
-	case EQUAL_EQUAL:
+	case lexer.EQUAL_EQUAL:
 		return isEqual(left, right), nil
 	}
 
@@ -144,19 +147,19 @@ func (v *interpreter) visitBinary(expr *Binary) (any, error) {
 	panic("unreachable")
 }
 
-func (v *interpreter) visitUnary(expr *Unary) (any, error) {
-	right, err := v.evaluate(expr.right)
+func (v *interpreter) VisitUnary(expr *ast.Unary) (any, error) {
+	right, err := v.evaluate(expr.Right)
 	if err != nil {
 		return nil, err
 	}
-	switch expr.operator.tokenType {
-	case MINUS:
-		n, err := asFloat64(&expr.operator, right)
+	switch expr.Operator.TokenType {
+	case lexer.MINUS:
+		n, err := asFloat64(&expr.Operator, right)
 		if err != nil {
 			return nil, err
 		}
 		return -n, nil
-	case BANG:
+	case lexer.BANG:
 		return !isTruthy(right), nil
 	}
 
@@ -164,39 +167,39 @@ func (v *interpreter) visitUnary(expr *Unary) (any, error) {
 	panic("unreachable")
 }
 
-func (v *interpreter) visitGrouping(expr *Grouping) (any, error) {
-	return v.evaluate(expr.expression)
+func (v *interpreter) VisitGrouping(expr *ast.Grouping) (any, error) {
+	return v.evaluate(expr.Expression)
 }
 
-func (v *interpreter) visitLiteral(expr *Literal) (any, error) {
-	return expr.value, nil
+func (v *interpreter) VisitLiteral(expr *ast.Literal) (any, error) {
+	return expr.Value, nil
 }
 
-func (v *interpreter) visitVariable(expr *Variable) (any, error) {
-	return v.environment.get(expr.name)
+func (v *interpreter) VisitVariable(expr *ast.Variable) (any, error) {
+	return v.environment.get(expr.Name)
 }
 
 // ----------- Statement section -------------------
 
-func (v *interpreter) visitVarStmt(stmt *VarStmt) error {
+func (v *interpreter) VisitVarStmt(stmt *ast.VarStmt) error {
 	var value any
-	if stmt.initializer != nil {
-		v, err := v.evaluate(stmt.initializer)
+	if stmt.Initializer != nil {
+		v, err := v.evaluate(stmt.Initializer)
 		if err != nil {
 			return err
 		}
 		value = v
 	}
 
-	v.environment.define(stmt.name.lexeme, value)
+	v.environment.define(stmt.Name.Lexeme, value)
 	return nil
 }
 
-func (v *interpreter) visitExpressionStmt(stmt *ExpressionStmt) (any, error) {
+func (v *interpreter) VisitExpressionStmt(stmt *ast.ExpressionStmt) (any, error) {
 	return v.evaluate(stmt.Expression)
 }
 
-func (v *interpreter) visitPrintStmt(stmt *PrintStmt) error {
+func (v *interpreter) VisitPrintStmt(stmt *ast.PrintStmt) error {
 	value, err := v.evaluate(stmt.Expression)
 	if err != nil {
 		return err
@@ -208,12 +211,12 @@ func (v *interpreter) visitPrintStmt(stmt *PrintStmt) error {
 
 // ------------------- Helpers ---------------------
 
-func (v *interpreter) execute(stmt Stmt) (any, error) {
+func (v *interpreter) execute(stmt ast.Stmt) (any, error) {
 	return stmt.Accept(v)
 }
 
 // evaluate dispatches AST node evaluation
-func (v *interpreter) evaluate(e Expr) (any, error) {
+func (v *interpreter) evaluate(e ast.Expr) (any, error) {
 	return e.Accept(v)
 }
 
@@ -232,26 +235,26 @@ func toFloat64(v any) (float64, bool) {
 }
 
 // asFloat64 validates and converts a single operand (used for unary ops)
-func asFloat64(operator *Token, operand any) (float64, *RuntimeError) {
+func asFloat64(operator *lexer.Token, operand any) (float64, *RuntimeError) {
 	n, ok := toFloat64(operand)
 	if !ok {
 		return 0, &RuntimeError{
-			tok:     operator,
-			message: operandMustBeNumberErrMsg,
+			Token:   operator,
+			Message: operandMustBeNumberErrMsg,
 		}
 	}
 	return n, nil
 }
 
 // asTwoFloat64 validates and converts two operands (used for binary math ops)
-func asTwoFloat64(op *Token, left, right any) (float64, float64, *RuntimeError) {
+func asTwoFloat64(op *lexer.Token, left, right any) (float64, float64, *RuntimeError) {
 	l, lok := toFloat64(left)
 	r, rok := toFloat64(right)
 
 	if !lok || !rok {
 		return 0, 0, &RuntimeError{
-			tok:     op,
-			message: operandsMustBeTwoNumbersErrMsg,
+			Token:   op,
+			Message: operandsMustBeTwoNumbersErrMsg,
 		}
 	}
 
@@ -281,7 +284,7 @@ func isTruthy(e any) bool {
 
 // compareOperands compares two values if both are numbers or both are strings
 // returns: -1 (a < b), 0 (a == b), 1 (a > b)
-func compareOperands(a, b any, operator *Token) (int, *RuntimeError) {
+func compareOperands(a, b any, operator *lexer.Token) (int, *RuntimeError) {
 	// string compare
 	if l, ok := a.(string); ok {
 		if r, ok := b.(string); ok {
@@ -289,15 +292,15 @@ func compareOperands(a, b any, operator *Token) (int, *RuntimeError) {
 		}
 
 		return 0, &RuntimeError{
-			tok:     operator,
-			message: operandsMustBeStrOrNumErrMsg,
+			Token:   operator,
+			Message: operandsMustBeStrOrNumErrMsg,
 		}
 	}
 
 	// number compare
 	l, r, err := asTwoFloat64(operator, a, b)
 	if err != nil {
-		err.message = operandsMustBeStrOrNumErrMsg // override err message for clarity
+		err.Message = operandsMustBeStrOrNumErrMsg // override err message for clarity
 		return 0, err
 	}
 

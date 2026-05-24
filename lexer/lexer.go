@@ -1,4 +1,4 @@
-package main
+package lexer
 
 import (
 	"fmt"
@@ -41,8 +41,8 @@ func NewLexer(source string) *lexer {
 	}
 }
 
-// scanTokens scans the source and extract the tokens
-func (l *lexer) scanTokens() ([]Token, error) {
+// ScanTokens scans the source and extract the tokens
+func (l *lexer) ScanTokens() ([]Token, error) {
 	for !l.isAtEnd() {
 		if err := l.scanToken(); err != nil {
 			return []Token{}, err
@@ -273,7 +273,7 @@ func (l *lexer) identifier() {
 }
 
 // addToken append a new token to `tokens`
-func (l *lexer) addToken(tokenType tokenType, literal ...any) {
+func (l *lexer) addToken(tokenType TokenType, literal ...any) {
 	lexeme := l.source[l.start:l.current]
 	var value any = nil
 

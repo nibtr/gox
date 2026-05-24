@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/nibtr/gox/runtime"
+)
 
 // TODO: maybe refactor this whole file lol
 
@@ -21,7 +25,7 @@ func report(line uint32, where string, msg string) {
 	hadError = true
 }
 
-func runtimeError(e *RuntimeError) {
-	fmt.Printf("%v\n[line %v]", e.message, e.tok.line)
+func runtimeError(e *runtime.RuntimeError) {
+	fmt.Printf("%v\n[line %v]", e.Message, e.Token.Line)
 	hadRuntimeError = true
 }

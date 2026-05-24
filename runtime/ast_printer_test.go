@@ -1,17 +1,20 @@
-package main
+package runtime
 
 import (
 	"testing"
+
+	"github.com/nibtr/gox/ast"
+	"github.com/nibtr/gox/lexer"
 )
 
 func TestAstPrinter(t *testing.T) {
-	ex := &Binary{
-		left: &Unary{
-			operator: NewToken(MINUS, "-", nil, 1),
-			right:    &Literal{value: 123},
+	ex := &ast.Binary{
+		Left: &ast.Unary{
+			Operator: lexer.NewToken(lexer.MINUS, "-", nil, 1),
+			Right:    &ast.Literal{Value: 123},
 		},
-		operator: NewToken(STAR, "*", nil, 1),
-		right:    &Grouping{expression: &Literal{45.67}},
+		Operator: lexer.NewToken(lexer.STAR, "*", nil, 1),
+		Right:    &ast.Grouping{Expression: &ast.Literal{Value: 45.67}},
 	}
 
 	printer := astPrinter{}
