@@ -44,7 +44,11 @@ any string literal.
 ### Precedence
 
 ```
-expression -> ternary 
+expression -> assignment ;
+
+assignment -> IDENTIFIER "=" assignment
+              | ternary ;
+
 ternary    -> equality
               | equality "?" expression ":" ternary ;
 

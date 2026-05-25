@@ -161,7 +161,32 @@ func (p *parser) synchronize() {
 }
 
 func (p *parser) expression() (ast.Expr, error) {
-	return p.ternary()
+	return p.assignment()
+}
+
+func (p *parser) assignment() (ast.Expr, error) {
+	expr, err := p.ternary()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.match(lexer.EQUAL) {
+		equals := p.previous()
+		value, err := p.assignment()
+		if err != nil {
+			return nil, err
+		}
+
+		// expr is a Variable
+		if v, ok := expr.(*ast.Variable); ok {
+			name := v.Name
+			return &ast.Assign{Name: name, Value: value}, nil
+		}
+
+		p.error(equals, "invalid assignment target.")
+	}
+
+	return expr, nil
 }
 
 func (p *parser) ternary() (ast.Expr, error) {

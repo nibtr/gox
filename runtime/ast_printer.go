@@ -23,6 +23,10 @@ func (v astPrinter) Print(e ast.Expr) (string, error) {
 	return str, nil
 }
 
+func (v astPrinter) VisitAssignExpr(n *ast.Assign) (any, error) {
+	return "", nil
+}
+
 func (v astPrinter) VisitTernary(n *ast.Ternary) (any, error) {
 	return v.parenthesize("?:", n.Condition, n.ThenExpr, n.ElseExpr)
 }

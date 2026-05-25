@@ -36,3 +36,12 @@ print (
 var a = "6";
 var b = "9";
 print a + b == "69" ? "sixty-nine" : "your mom" ;
+
+a = true ? 5 : 7; // 5
+print a;
+var a = "7"; // 7
+print a;
+print a = 69; // 69
+var c;
+print c; // nil
+

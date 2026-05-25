@@ -5,6 +5,9 @@ import (
 )
 
 type ExprVisitor interface {
+	// VisitAssignExpr evaluates an assignment expression by evaluating
+	// the right-hand side and assigning the result to the left-hand side.
+	VisitAssignExpr(n *Assign) (any, error)
 	// VisitTernary evaluates condition ? thenExpr : elseExpr
 	VisitTernary(n *Ternary) (any, error)
 	// VisitBinary evaluates binary expressions like +, -, *, /, comparisons
@@ -21,6 +24,11 @@ type ExprVisitor interface {
 
 type Expr interface {
 	Accept(v ExprVisitor) (any, error)
+}
+
+type Assign struct {
+	Name  lexer.Token
+	Value Expr
 }
 
 type Ternary struct {
@@ -50,6 +58,10 @@ type Literal struct {
 
 type Variable struct {
 	Name lexer.Token
+}
+
+func (n *Assign) Accept(v ExprVisitor) (any, error) {
+	return v.VisitAssignExpr(n)
 }
 
 func (n *Ternary) Accept(v ExprVisitor) (any, error) {

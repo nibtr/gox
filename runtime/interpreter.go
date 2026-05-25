@@ -48,6 +48,17 @@ func (v *interpreter) Intepret(statements []ast.Stmt) error {
 
 // ------------ Expression section -------------------
 
+func (v *interpreter) VisitAssignExpr(expr *ast.Assign) (any, error) {
+	value, err := v.evaluate(expr.Value)
+	if err != nil {
+		return nil, err
+	}
+	if err := v.environment.assign(expr.Name, value); err != nil {
+		return nil, err
+	}
+	return value, nil
+}
+
 func (v *interpreter) VisitTernary(expr *ast.Ternary) (any, error) {
 	val, err := v.evaluate(expr.Condition)
 	if err != nil {
