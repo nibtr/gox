@@ -220,6 +220,10 @@ func (v *interpreter) VisitPrintStmt(stmt *ast.PrintStmt) error {
 	return nil
 }
 
+func (v *interpreter) VisitBlockStmt(stmt *ast.BlockStmt) error {
+	return v.executeBlock(stmt.Statements, NewEnvironmentWithEnclosing(v.environment))
+}
+
 // ------------------- Helpers ---------------------
 
 func (v *interpreter) execute(stmt ast.Stmt) (any, error) {
@@ -229,6 +233,23 @@ func (v *interpreter) execute(stmt ast.Stmt) (any, error) {
 // evaluate dispatches AST node evaluation
 func (v *interpreter) evaluate(e ast.Expr) (any, error) {
 	return e.Accept(v)
+}
+
+func (v *interpreter) executeBlock(stmts []ast.Stmt, env *Environment) error {
+	// restore previous environment if error occurs
+	previous := v.environment
+	defer func() {
+		v.environment = previous
+	}()
+
+	v.environment = env
+	for _, stmt := range stmts {
+		if _, err := v.execute(stmt); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // toFloat64 converts supported numeric types into float64

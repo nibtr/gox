@@ -105,6 +105,17 @@ func (p *parser) statement() (ast.Stmt, error) {
 	if p.match(lexer.PRINT) {
 		return p.printStatement()
 	}
+
+	if p.match(lexer.LEFT_BRACE) {
+		stmts, err := p.block()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.BlockStmt{
+			Statements: stmts,
+		}, nil
+	}
+
 	return p.expressionStatement()
 }
 
@@ -119,6 +130,21 @@ func (p *parser) printStatement() (ast.Stmt, error) {
 	}
 
 	return &ast.PrintStmt{Expression: value}, nil
+}
+
+func (p *parser) block() ([]ast.Stmt, error) {
+	stmts := []ast.Stmt{}
+	for !p.check(lexer.RIGHT_BRACE) && !p.isAtEnd() {
+		dec, err := p.declaration()
+		if err != nil {
+			return nil, err
+		}
+		stmts = append(stmts, dec)
+	}
+	if _, err := p.consume(lexer.RIGHT_BRACE, "expect '}' after block."); err != nil {
+		return nil, err
+	}
+	return stmts, nil
 }
 
 func (p *parser) expressionStatement() (ast.Stmt, error) {

@@ -11,6 +11,7 @@ type Stmt interface {
 type StmtVisitor interface {
 	VisitExpressionStmt(stmt *ExpressionStmt) (any, error)
 	VisitPrintStmt(stmt *PrintStmt) error
+	VisitBlockStmt(stmt *BlockStmt) error
 	VisitVarStmt(stmt *VarStmt) error
 }
 
@@ -20,6 +21,10 @@ type ExpressionStmt struct {
 
 type PrintStmt struct {
 	Expression Expr
+}
+
+type BlockStmt struct {
+	Statements []Stmt
 }
 
 type VarStmt struct {
@@ -33,6 +38,11 @@ func (s *ExpressionStmt) Accept(v StmtVisitor) (any, error) {
 
 func (s *PrintStmt) Accept(v StmtVisitor) (any, error) {
 	err := v.VisitPrintStmt(s)
+	return nil, err
+}
+
+func (s *BlockStmt) Accept(v StmtVisitor) (any, error) {
+	err := v.VisitBlockStmt(s)
 	return nil, err
 }
 

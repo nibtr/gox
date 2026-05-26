@@ -1,0 +1,67 @@
+// test block
+var a = "global a";
+var b = "global b";
+var c = "global c";
+{
+  var a = "outer a";
+  var b = "outer b";
+  {
+    var a = "inner a";
+    print a; // inner a
+    print b; // outer b
+    print c; // global c
+  }
+  print a; // outer a
+  print b; // outer b
+  print c; // global c
+}
+print a; // global a
+print b; // global b
+print c; // global c
+
+// another test
+var a = 1;
+{
+  var a = 2;
+  {
+    a = 3;
+    print a; // 3
+  }
+  print a; // 3
+}
+print a; // 1
+
+// another test
+var a = 1;
+{
+  a = 2;
+  print a; // 2
+}
+print a; // 2
+
+// another test
+var a = "global";
+{
+  {
+    {
+      print a; // global
+    }
+  }
+}
+
+// another test
+{
+  var secret = 123;
+}
+// uncomment below to test
+print secret; // runtime error
+
+// another test
+{
+  var a = "first";
+  print a; // first
+}
+{
+  var a = "second";
+  print a; // second
+}
