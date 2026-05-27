@@ -1,0 +1,57 @@
+// test if-else blocks
+
+var a = 60;
+var b = 9;
+if (a + b) == 69 {
+  print "your mom";
+} else {
+  print "not gonna print";
+}
+
+if true and false {
+  print "false";
+} else {
+  print "true";
+}
+
+if 1 and 2 and 3 and 4 {
+  print "1234";
+}
+
+if 0 or 42 {
+  print "ok";
+} else {
+  print "no";
+}
+// ok
+
+if nil {
+  print "never";
+} else {
+  print "nil is falsey";
+}
+// nil is falsey
+
+if 5 or 0 and 1 {
+  print "hit";
+}
+// hit
+
+if (5 or 0) and 1 {
+  print "grouped";
+}
+// grouped
+
+if true
+  if false {
+    print "A";
+  } else {
+    print "B";
+  }
+
+if (a = 0) {
+  print "assigned";
+} else {
+  print "no";
+}
+// no (because 0 is falsey)

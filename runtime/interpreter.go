@@ -33,7 +33,7 @@ type RuntimeError struct {
 }
 
 func (e *RuntimeError) Error() string {
-	return fmt.Sprintf("error at '%s': %s\n", e.Token.Lexeme, e.Message)
+	return fmt.Sprintf("[line %d] error at '%s': %s\n", e.Token.Line, e.Token.Lexeme, e.Message)
 }
 
 func (v *interpreter) Eval(expr ast.Expr) (any, error) {
@@ -72,6 +72,25 @@ func (v *interpreter) VisitTernary(expr *ast.Ternary) (any, error) {
 	} else {
 		return v.evaluate(expr.ElseExpr)
 	}
+}
+
+func (v *interpreter) VisitLogical(expr *ast.Logical) (any, error) {
+	left, err := v.evaluate(expr.Left)
+	if err != nil {
+		return nil, err
+	}
+
+	if expr.Operator.TokenType == lexer.OR {
+		if isTruthy(left) {
+			return left, nil
+		}
+	} else {
+		if !isTruthy(left) {
+			return left, nil
+		}
+	}
+
+	return v.evaluate(expr.Right)
 }
 
 func (v *interpreter) VisitBinary(expr *ast.Binary) (any, error) {

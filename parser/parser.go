@@ -14,18 +14,18 @@ type parser struct {
 }
 
 type ParseError struct {
-	tok     *lexer.Token
-	message string
+	Token   *lexer.Token
+	Message string
 }
 
 func (e *ParseError) Error() string {
-	if e.tok.TokenType == lexer.EOF {
-		return fmt.Sprintf("[line %d] Error at end: %s\n", e.tok.Line, e.message)
+	if e.Token.TokenType == lexer.EOF {
+		return fmt.Sprintf("[line %d] error at end: %s\n", e.Token.Line-1, e.Message)
 	}
-	return fmt.Sprintf("[line %d] Error at '%s': %s\n",
-		e.tok.Line,
-		e.tok.Lexeme,
-		e.message,
+	return fmt.Sprintf("[line %d] error at '%s': %s\n",
+		e.Token.Line,
+		e.Token.Lexeme,
+		e.Message,
 	)
 }
 
@@ -249,7 +249,7 @@ func (p *parser) assignment() (ast.Expr, error) {
 }
 
 func (p *parser) ternary() (ast.Expr, error) {
-	expr, err := p.equality()
+	expr, err := p.or()
 	if err != nil {
 		return nil, err
 	}
@@ -277,6 +277,51 @@ func (p *parser) ternary() (ast.Expr, error) {
 		}, nil
 	}
 
+	return expr, nil
+}
+
+func (p *parser) or() (ast.Expr, error) {
+	expr, err := p.and()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.match(lexer.OR) {
+		operator := p.previous()
+		right, err := p.and()
+		if err != nil {
+			return nil, err
+		}
+
+		expr = &ast.Logical{
+			Left:     expr,
+			Operator: *operator,
+			Right:    right,
+		}
+	}
+
+	return expr, nil
+}
+
+func (p *parser) and() (ast.Expr, error) {
+	expr, err := p.equality()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.match(lexer.AND) {
+		operator := p.previous()
+		right, err := p.equality()
+		if err != nil {
+			return nil, err
+		}
+
+		expr = &ast.Logical{
+			Left:     expr,
+			Operator: *operator,
+			Right:    right,
+		}
+	}
 	return expr, nil
 }
 
@@ -486,7 +531,7 @@ func (p *parser) consume(t lexer.TokenType, message string) (*lexer.Token, error
 // error returns a parserError should any parsing errors occur
 func (p *parser) error(t *lexer.Token, message string) *ParseError {
 	return &ParseError{
-		tok:     t,
-		message: message,
+		Token:   t,
+		Message: message,
 	}
 }

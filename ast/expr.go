@@ -10,6 +10,8 @@ type ExprVisitor interface {
 	VisitAssignExpr(n *Assign) (any, error)
 	// VisitTernary evaluates condition ? thenExpr : elseExpr
 	VisitTernary(n *Ternary) (any, error)
+
+	VisitLogical(n *Logical) (any, error)
 	// VisitBinary evaluates binary expressions like +, -, *, /, comparisons
 	VisitBinary(n *Binary) (any, error)
 	// VisitUnary evaluates unary expressions like -x and !x
@@ -35,6 +37,12 @@ type Ternary struct {
 	Condition Expr
 	ThenExpr  Expr
 	ElseExpr  Expr
+}
+
+type Logical struct {
+	Left     Expr
+	Operator lexer.Token
+	Right    Expr
 }
 
 type Binary struct {
@@ -66,6 +74,10 @@ func (n *Assign) Accept(v ExprVisitor) (any, error) {
 
 func (n *Ternary) Accept(v ExprVisitor) (any, error) {
 	return v.VisitTernary(n)
+}
+
+func (n *Logical) Accept(v ExprVisitor) (any, error) {
+	return v.VisitLogical(n)
 }
 
 func (n *Binary) Accept(v ExprVisitor) (any, error) {

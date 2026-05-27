@@ -24,11 +24,22 @@ func (v astPrinter) Print(e ast.Expr) (string, error) {
 }
 
 func (v astPrinter) VisitAssignExpr(n *ast.Assign) (any, error) {
-	return "", nil
+	return v.parenthesize(
+		"assign "+n.Name.Lexeme,
+		n.Value,
+	)
 }
 
 func (v astPrinter) VisitTernary(n *ast.Ternary) (any, error) {
 	return v.parenthesize("?:", n.Condition, n.ThenExpr, n.ElseExpr)
+}
+
+func (v astPrinter) VisitLogical(n *ast.Logical) (any, error) {
+	return v.parenthesize(
+		n.Operator.Lexeme,
+		n.Left,
+		n.Right,
+	)
 }
 
 func (v astPrinter) VisitBinary(n *ast.Binary) (any, error) {
