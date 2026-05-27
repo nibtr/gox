@@ -1,0 +1,21 @@
+var a = 6;
+var b = 4;
+var result = 0;
+
+while b > 0 {
+    result = result + a;
+    b = b - 1;
+}
+
+print result;
+
+// Factorial
+var n = 5;
+var result = 1;
+
+while n > 1 {
+    result = result * n;
+    n = n - 1;
+}
+
+print result;

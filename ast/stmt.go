@@ -11,6 +11,7 @@ type Stmt interface {
 type StmtVisitor interface {
 	VisitExpressionStmt(stmt *ExpressionStmt) error
 	VisitIfStmt(stmt *IfStmt) error
+	VisitWhileStmt(stmt *WhileStmt) error
 	VisitPrintStmt(stmt *PrintStmt) error
 	VisitBlockStmt(stmt *BlockStmt) error
 	VisitVarStmt(stmt *VarStmt) error
@@ -20,6 +21,11 @@ type IfStmt struct {
 	Condition  Expr
 	ThenBranch Stmt
 	ElseBranch Stmt
+}
+
+type WhileStmt struct {
+	Condition Expr
+	Body      Stmt
 }
 
 type ExpressionStmt struct {
@@ -41,6 +47,10 @@ type VarStmt struct {
 
 func (s *IfStmt) Accept(v StmtVisitor) error {
 	return v.VisitIfStmt(s)
+}
+
+func (s *WhileStmt) Accept(v StmtVisitor) error {
+	return v.VisitWhileStmt(s)
 }
 
 func (s *ExpressionStmt) Accept(v StmtVisitor) error {

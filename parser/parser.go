@@ -112,6 +112,9 @@ func (p *parser) statement() (ast.Stmt, error) {
 	if p.match(lexer.PRINT) {
 		return p.printStatement()
 	}
+	if p.match(lexer.WHILE) {
+		return p.whileStatement()
+	}
 
 	if p.match(lexer.LEFT_BRACE) {
 		stmts, err := p.block()
@@ -150,6 +153,19 @@ func (p *parser) ifStatement() (ast.Stmt, error) {
 		ThenBranch: thenBranch,
 		ElseBranch: elseBranch,
 	}, nil
+}
+
+func (p *parser) whileStatement() (ast.Stmt, error) {
+	condition, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+	body, err := p.statement()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.WhileStmt{Condition: condition, Body: body}, nil
 }
 
 func (p *parser) printStatement() (ast.Stmt, error) {
