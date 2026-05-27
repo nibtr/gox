@@ -36,6 +36,10 @@ func (e *RuntimeError) Error() string {
 	return fmt.Sprintf("error at '%s': %s\n", e.Token.Lexeme, e.Message)
 }
 
+func (v *interpreter) Eval(expr ast.Expr) (any, error) {
+	return v.evaluate(expr)
+}
+
 func (v *interpreter) Intepret(statements []ast.Stmt) error {
 	for _, s := range statements {
 		_, err := v.execute(s)

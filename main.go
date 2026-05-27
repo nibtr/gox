@@ -19,7 +19,7 @@ func runFile(path string) {
 		panic(fmt.Errorf("read file %s: %w", path, err))
 	}
 
-	err = run(string(bytes))
+	err = run(string(bytes), false)
 	var le *lexer.LexerError
 	var pe *parser.ParseError
 	var re *runtime.RuntimeError
@@ -48,7 +48,7 @@ func runPrompt() {
 	}()
 
 	for {
-		fmt.Print("> ")
+		fmt.Print(">>> ")
 
 		if !scanner.Scan() {
 			// EOF or error
@@ -58,13 +58,13 @@ func runPrompt() {
 			break
 		}
 
-		run(scanner.Text())
+		run(scanner.Text(), true)
 		// hadError = false // reset the error flag
 	}
 }
 
 // run executes the interpreter for a source
-func run(source string) error {
+func run(source string, isRepl bool) error {
 	l := lexer.NewLexer(source)
 	tokens, err := l.ScanTokens()
 	if err != nil {
@@ -72,15 +72,31 @@ func run(source string) error {
 		return err
 	}
 
-	parser := parser.NewParser(tokens)
-	statements, err := parser.Parse()
+	p := parser.NewParser(tokens)
+	intrp := runtime.NewInterpreter()
+
+	if isRepl {
+		// for REPL, try parsing expression first
+		expr, err := p.ParseExpression()
+		if err == nil && p.IsAtEnd() {
+			value, err := intrp.Eval(expr)
+			if err != nil {
+				fmt.Printf("%v\n", err)
+				return err
+			}
+			fmt.Println(value)
+			return nil
+		}
+	}
+
+	// fallback to normal program parsing
+	p = parser.NewParser(tokens)
+	statements, err := p.ParseProgram()
 	if err != nil {
 		fmt.Printf("%v\n", err)
 		return err
 	}
 
-	// fmt.Println(astPrinter{}.Print(expr))
-	intrp := runtime.NewInterpreter()
 	err = intrp.Intepret(statements)
 	if err != nil {
 		fmt.Printf("%v\n", err)

@@ -36,9 +36,13 @@ func NewParser(tokens []lexer.Token) *parser {
 	}
 }
 
-func (p *parser) Parse() ([]ast.Stmt, error) {
+func (p *parser) ParseExpression() (ast.Expr, error) {
+	return p.expression()
+}
+
+func (p *parser) ParseProgram() ([]ast.Stmt, error) {
 	statements := []ast.Stmt{}
-	for !p.isAtEnd() {
+	for !p.IsAtEnd() {
 		stmt, err := p.declaration()
 		if err != nil {
 			return nil, err
@@ -134,7 +138,7 @@ func (p *parser) printStatement() (ast.Stmt, error) {
 
 func (p *parser) block() ([]ast.Stmt, error) {
 	stmts := []ast.Stmt{}
-	for !p.check(lexer.RIGHT_BRACE) && !p.isAtEnd() {
+	for !p.check(lexer.RIGHT_BRACE) && !p.IsAtEnd() {
 		dec, err := p.declaration()
 		if err != nil {
 			return nil, err
@@ -165,7 +169,7 @@ func (p *parser) expressionStatement() (ast.Stmt, error) {
 func (p *parser) synchronize() {
 	p.advance()
 
-	for !p.isAtEnd() {
+	for !p.IsAtEnd() {
 		if t := p.previous(); t.TokenType == lexer.SEMICOLON {
 			return
 		}
@@ -409,7 +413,7 @@ func (p *parser) match(types ...lexer.TokenType) bool {
 
 // check checks if token at `current` is equal to `t`
 func (p *parser) check(t lexer.TokenType) bool {
-	if p.isAtEnd() {
+	if p.IsAtEnd() {
 		return false
 	}
 
@@ -419,14 +423,14 @@ func (p *parser) check(t lexer.TokenType) bool {
 // advance consumes the token at `current` and returns it,
 // then advances `current` to next token
 func (p *parser) advance() *lexer.Token {
-	if !p.isAtEnd() {
+	if !p.IsAtEnd() {
 		p.current++
 	}
 	return p.previous()
 }
 
-// isAtEnd checks if the token at `current` is an EOF
-func (p *parser) isAtEnd() bool {
+// IsAtEnd checks if the token at `current` is an EOF
+func (p *parser) IsAtEnd() bool {
 	return p.peek().TokenType == lexer.EOF
 }
 
