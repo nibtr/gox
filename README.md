@@ -51,7 +51,7 @@ with `go run main.go`.
 ```
 go run main.go # run the repl
 
-> print 1 * (2 + 3); # 5 
+> 1 * (2 + 3) # 5 
 
 # or with files
 
