@@ -239,9 +239,9 @@ func (v *interpreter) VisitIfStmt(stmt *ast.IfStmt) error {
 		return err
 	}
 	if isTruthy(cond) {
-		return v.execute(stmt.ThenBranch)
+		return v.executeBlock(stmt.ThenBranch.Statements, NewEnvironmentWithEnclosing(v.environment))
 	} else if stmt.ElseBranch != nil {
-		return v.execute(stmt.ElseBranch)
+		return v.executeBlock(stmt.ElseBranch.Statements, NewEnvironmentWithEnclosing(v.environment))
 	}
 
 	return nil

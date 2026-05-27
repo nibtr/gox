@@ -18,8 +18,8 @@ type StmtVisitor interface {
 
 type IfStmt struct {
 	Condition  Expr
-	ThenBranch Stmt
-	ElseBranch Stmt
+	ThenBranch *BlockStmt
+	ElseBranch *BlockStmt
 }
 
 type ExpressionStmt struct {

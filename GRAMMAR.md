@@ -82,8 +82,8 @@ statement   -> exprStmt
              | printStmt
              | block ;
 
-ifStmt      -> "if" expression statement
-               ( "else" statement )? ;
+ifStmt      -> "if" expression block
+               ( "else" block )? ;
 
 block       -> "{" declaration* "}" ;
 

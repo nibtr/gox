@@ -132,16 +132,32 @@ func (p *parser) ifStatement() (ast.Stmt, error) {
 		return nil, err
 	}
 
-	thenBranch, err := p.statement()
+	_, err = p.consume(lexer.LEFT_BRACE, "expect { after if.")
 	if err != nil {
 		return nil, err
 	}
 
-	var elseBranch ast.Stmt
+	thenStmts, err := p.block()
+	if err != nil {
+		return nil, err
+	}
+	thenBranch := &ast.BlockStmt{
+		Statements: thenStmts,
+	}
+
+	var elseBranch *ast.BlockStmt
 	if p.match(lexer.ELSE) {
-		elseBranch, err = p.statement()
+		_, err := p.consume(lexer.LEFT_BRACE, "expect { after else.")
 		if err != nil {
 			return nil, err
+		}
+
+		elseStmts, err := p.block()
+		if err != nil {
+			return nil, err
+		}
+		elseBranch = &ast.BlockStmt{
+			Statements: elseStmts,
 		}
 	}
 
