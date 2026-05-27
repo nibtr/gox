@@ -106,6 +106,9 @@ func (p *parser) varDeclaration() (ast.Stmt, error) {
 }
 
 func (p *parser) statement() (ast.Stmt, error) {
+	if p.match(lexer.IF) {
+		return p.ifStatement()
+	}
 	if p.match(lexer.PRINT) {
 		return p.printStatement()
 	}
@@ -121,6 +124,32 @@ func (p *parser) statement() (ast.Stmt, error) {
 	}
 
 	return p.expressionStatement()
+}
+
+func (p *parser) ifStatement() (ast.Stmt, error) {
+	condition, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+
+	thenBranch, err := p.statement()
+	if err != nil {
+		return nil, err
+	}
+
+	var elseBranch ast.Stmt
+	if p.match(lexer.ELSE) {
+		elseBranch, err = p.statement()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &ast.IfStmt{
+		Condition:  condition,
+		ThenBranch: thenBranch,
+		ElseBranch: elseBranch,
+	}, nil
 }
 
 func (p *parser) printStatement() (ast.Stmt, error) {

@@ -42,8 +42,7 @@ func (v *interpreter) Eval(expr ast.Expr) (any, error) {
 
 func (v *interpreter) Intepret(statements []ast.Stmt) error {
 	for _, s := range statements {
-		_, err := v.execute(s)
-		if err != nil {
+		if err := v.execute(s); err != nil {
 			return err
 		}
 	}
@@ -210,8 +209,23 @@ func (v *interpreter) VisitVarStmt(stmt *ast.VarStmt) error {
 	return nil
 }
 
-func (v *interpreter) VisitExpressionStmt(stmt *ast.ExpressionStmt) (any, error) {
-	return v.evaluate(stmt.Expression)
+func (v *interpreter) VisitExpressionStmt(stmt *ast.ExpressionStmt) error {
+	_, err := v.evaluate(stmt.Expression)
+	return err
+}
+
+func (v *interpreter) VisitIfStmt(stmt *ast.IfStmt) error {
+	cond, err := v.evaluate(stmt.Condition)
+	if err != nil {
+		return err
+	}
+	if isTruthy(cond) {
+		return v.execute(stmt.ThenBranch)
+	} else if stmt.ElseBranch != nil {
+		return v.execute(stmt.ElseBranch)
+	}
+
+	return nil
 }
 
 func (v *interpreter) VisitPrintStmt(stmt *ast.PrintStmt) error {
@@ -230,7 +244,7 @@ func (v *interpreter) VisitBlockStmt(stmt *ast.BlockStmt) error {
 
 // ------------------- Helpers ---------------------
 
-func (v *interpreter) execute(stmt ast.Stmt) (any, error) {
+func (v *interpreter) execute(stmt ast.Stmt) error {
 	return stmt.Accept(v)
 }
 
@@ -248,7 +262,7 @@ func (v *interpreter) executeBlock(stmts []ast.Stmt, env *Environment) error {
 
 	v.environment = env
 	for _, stmt := range stmts {
-		if _, err := v.execute(stmt); err != nil {
+		if err := v.execute(stmt); err != nil {
 			return err
 		}
 	}

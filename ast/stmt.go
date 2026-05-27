@@ -5,14 +5,21 @@ import (
 )
 
 type Stmt interface {
-	Accept(visitor StmtVisitor) (any, error)
+	Accept(visitor StmtVisitor) error
 }
 
 type StmtVisitor interface {
-	VisitExpressionStmt(stmt *ExpressionStmt) (any, error)
+	VisitExpressionStmt(stmt *ExpressionStmt) error
+	VisitIfStmt(stmt *IfStmt) error
 	VisitPrintStmt(stmt *PrintStmt) error
 	VisitBlockStmt(stmt *BlockStmt) error
 	VisitVarStmt(stmt *VarStmt) error
+}
+
+type IfStmt struct {
+	Condition  Expr
+	ThenBranch Stmt
+	ElseBranch Stmt
 }
 
 type ExpressionStmt struct {
@@ -32,21 +39,22 @@ type VarStmt struct {
 	Initializer Expr
 }
 
-func (s *ExpressionStmt) Accept(v StmtVisitor) (any, error) {
+func (s *IfStmt) Accept(v StmtVisitor) error {
+	return v.VisitIfStmt(s)
+}
+
+func (s *ExpressionStmt) Accept(v StmtVisitor) error {
 	return v.VisitExpressionStmt(s)
 }
 
-func (s *PrintStmt) Accept(v StmtVisitor) (any, error) {
-	err := v.VisitPrintStmt(s)
-	return nil, err
+func (s *PrintStmt) Accept(v StmtVisitor) error {
+	return v.VisitPrintStmt(s)
 }
 
-func (s *BlockStmt) Accept(v StmtVisitor) (any, error) {
-	err := v.VisitBlockStmt(s)
-	return nil, err
+func (s *BlockStmt) Accept(v StmtVisitor) error {
+	return v.VisitBlockStmt(s)
 }
 
-func (s *VarStmt) Accept(v StmtVisitor) (any, error) {
-	err := v.VisitVarStmt(s)
-	return nil, err
+func (s *VarStmt) Accept(v StmtVisitor) error {
+	return v.VisitVarStmt(s)
 }
