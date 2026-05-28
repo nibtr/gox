@@ -106,6 +106,9 @@ func (p *parser) varDeclaration() (ast.Stmt, error) {
 }
 
 func (p *parser) statement() (ast.Stmt, error) {
+	if p.match(lexer.FOR) {
+		return p.forStatement()
+	}
 	if p.match(lexer.IF) {
 		return p.ifStatement()
 	}
@@ -127,6 +130,73 @@ func (p *parser) statement() (ast.Stmt, error) {
 	}
 
 	return p.expressionStatement()
+}
+
+func (p *parser) forStatement() (ast.Stmt, error) {
+	var initializer ast.Stmt
+	if p.match(lexer.SEMICOLON) {
+		initializer = nil
+	} else if p.match(lexer.VAR) {
+		v, err := p.varDeclaration()
+		if err != nil {
+			return nil, err
+		}
+		initializer = v
+	} else {
+		v, err := p.expressionStatement()
+		if err != nil {
+			return nil, err
+		}
+		initializer = v
+	}
+
+	var condition ast.Expr
+	if !p.check(lexer.SEMICOLON) {
+		v, err := p.expression()
+		if err != nil {
+			return nil, err
+		}
+		condition = v
+	}
+
+	_, err := p.consume(lexer.SEMICOLON, "expect ';' after loop condition.")
+	if err != nil {
+		return nil, err
+	}
+
+	var increment ast.Expr
+	if !p.check(lexer.LEFT_BRACE) {
+		v, err := p.expression()
+		if err != nil {
+			return nil, err
+		}
+		increment = v
+	}
+
+	body, err := p.statement()
+	if err != nil {
+		return nil, err
+	}
+	if increment != nil {
+		body = &ast.BlockStmt{
+			Statements: []ast.Stmt{
+				body,
+				&ast.ExpressionStmt{Expression: increment},
+			},
+		}
+	}
+	if condition == nil {
+		condition = &ast.Literal{Value: true}
+	}
+	body = &ast.WhileStmt{Condition: condition, Body: body}
+	if initializer != nil {
+		body = &ast.BlockStmt{Statements: []ast.Stmt{
+			initializer,
+			body,
+		}}
+	}
+
+	return body, nil
 }
 
 func (p *parser) ifStatement() (ast.Stmt, error) {
