@@ -97,6 +97,3 @@ printStmt   -> print expression ";" ;
 whileStmt   -> "while" expression statement ;
 block       -> "{" declaration* "}" ;
 ```
-
-# TODO:
-- break and continue in loops

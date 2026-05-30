@@ -603,7 +603,7 @@ func (p *parser) finishCall(callee ast.Expr) (ast.Expr, error) {
 		}
 	}
 
-	paren, err := p.consume(lexer.LEFT_PAREN, "expect ')' after arguments.")
+	paren, err := p.consume(lexer.RIGHT_PAREN, "expect ')' after arguments.")
 	if err != nil {
 		return nil, err
 	}

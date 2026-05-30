@@ -14,15 +14,27 @@ const (
 	operandsMustBeTwoNumbersErrMsg = "operands must be two numbers"
 	operandMustBeNumberErrMsg      = "operand must be a number"
 	operandsMustBeStrOrNumErrMsg   = "operands must be two strings or numbers"
+
+	// navtive functions
+	nativeClock = "clock"
 )
 
 type interpreter struct {
+	// global environment
+	globals *Environment
+	// current environment
 	environment *Environment
 }
 
 func NewInterpreter() *interpreter {
+	globals := NewEnvironment()
+
+	// stuff native-functions in global scope
+	globals.define(nativeClock, &Clock{})
+
 	return &interpreter{
-		environment: NewEnvironment(),
+		globals:     globals,
+		environment: globals,
 	}
 }
 
@@ -214,7 +226,7 @@ func (v *interpreter) VisitCall(expr *ast.Call) (any, error) {
 		arguments = append(arguments, value)
 	}
 
-	function, ok := callee.(callable)
+	function, ok := callee.(Callable)
 	// check if callee is callable
 	if !ok {
 		return nil, &RuntimeError{
@@ -224,15 +236,15 @@ func (v *interpreter) VisitCall(expr *ast.Call) (any, error) {
 	}
 
 	// check for arity
-	if len(arguments) != function.arity() {
+	if len(arguments) != function.Arity() {
 		return nil, &RuntimeError{
 			Token:   &expr.Paren,
-			Message: fmt.Sprintf("expected %d arguments but got %d.", function.arity(), len(arguments)),
+			Message: fmt.Sprintf("expected %d arguments but got %d.", function.Arity(), len(arguments)),
 		}
 	}
 
 	// TODO: callable interface
-	return function.call(v, arguments), nil
+	return function.Call(v, arguments)
 }
 
 func (v *interpreter) VisitGrouping(expr *ast.Grouping) (any, error) {
