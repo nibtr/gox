@@ -64,6 +64,15 @@ func (p *parser) declaration() (ast.Stmt, error) {
 	//   - call p.synchronize()
 	//   - continue parsing after errors
 	//   - requires returning aggregated errors
+
+	if p.match(lexer.FUNC) {
+		v, err := p.function("function")
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+
 	if p.match(lexer.VAR) {
 		v, err := p.varDeclaration()
 		if err != nil {
@@ -79,6 +88,51 @@ func (p *parser) declaration() (ast.Stmt, error) {
 		return nil, err
 	}
 	return v, nil
+}
+
+func (p *parser) function(kind string) (ast.Stmt, error) {
+	name, err := p.consume(lexer.IDENTIFIER, fmt.Sprintf("expect %s name.", kind))
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = p.consume(lexer.LEFT_PAREN, fmt.Sprintf("expect '(' after %s name.", kind))
+	if err != nil {
+		return nil, err
+	}
+
+	params := []lexer.Token{}
+	if !p.check(lexer.RIGHT_PAREN) {
+		for {
+			if len(params) >= 255 {
+				return nil, p.error(p.peek(), "can't have more than 255 parameters.")
+			}
+
+			v, err := p.consume(lexer.IDENTIFIER, "expect parameter name")
+			if err != nil {
+				return nil, err
+			}
+			params = append(params, *v)
+
+			if !p.match(lexer.COMMA) {
+				break
+			}
+		}
+	}
+
+	_, err = p.consume(lexer.RIGHT_PAREN, "expect ')' after parameters.")
+	_, err = p.consume(lexer.LEFT_BRACE, fmt.Sprintf("expect '{' before %s body.", kind))
+
+	body, err := p.block()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.FunctionStmt{
+		Name:   *name,
+		Params: params,
+		Body:   body,
+	}, nil
 }
 
 func (p *parser) varDeclaration() (ast.Stmt, error) {

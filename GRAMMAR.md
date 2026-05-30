@@ -73,8 +73,13 @@ primary    -> NUMBER | STRING | "true" | "false" | "nil"
 ```
 program     -> declaration* EOF ;
 
-declaration -> varDecl
+declaration -> funcDecl
+             | varDecl 
              | statement ;
+
+funcDecl    -> "func" function ;
+function    -> IDENTIFER "(" parameters? ")" block ;
+parameters  -> IDENTIFER ( "," IDENTIFER )* ;
 
 varDecl     -> "var" IDENTIFIER ( "=" expression )? ";" ;
 
