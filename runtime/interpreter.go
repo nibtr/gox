@@ -200,6 +200,41 @@ func (v *interpreter) VisitUnary(expr *ast.Unary) (any, error) {
 	panic("unreachable")
 }
 
+func (v *interpreter) VisitCall(expr *ast.Call) (any, error) {
+	callee, err := v.evaluate(expr.Callee)
+	if err != nil {
+		return nil, err
+	}
+	arguments := []any{}
+	for _, arg := range expr.Arguments {
+		value, err := v.evaluate(arg)
+		if err != nil {
+			return nil, err
+		}
+		arguments = append(arguments, value)
+	}
+
+	function, ok := callee.(callable)
+	// check if callee is callable
+	if !ok {
+		return nil, &RuntimeError{
+			Token:   &expr.Paren,
+			Message: "can only call functions and classes",
+		}
+	}
+
+	// check for arity
+	if len(arguments) != function.arity() {
+		return nil, &RuntimeError{
+			Token:   &expr.Paren,
+			Message: fmt.Sprintf("expected %d arguments but got %d.", function.arity(), len(arguments)),
+		}
+	}
+
+	// TODO: callable interface
+	return function.call(v, arguments), nil
+}
+
 func (v *interpreter) VisitGrouping(expr *ast.Grouping) (any, error) {
 	return v.evaluate(expr.Expression)
 }

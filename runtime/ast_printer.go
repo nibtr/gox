@@ -23,6 +23,15 @@ func (v astPrinter) Print(e ast.Expr) (string, error) {
 	return str, nil
 }
 
+// VisitCall implements [ast.ExprVisitor].
+func (v astPrinter) VisitCall(n *ast.Call) (any, error) {
+	exprs := make([]ast.Expr, 0, len(n.Arguments)+1)
+	exprs = append(exprs, n.Callee)
+	exprs = append(exprs, n.Arguments...)
+
+	return v.parenthesize("call", exprs...)
+}
+
 func (v astPrinter) VisitAssignExpr(n *ast.Assign) (any, error) {
 	return v.parenthesize(
 		"assign "+n.Name.Lexeme,

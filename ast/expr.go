@@ -10,10 +10,13 @@ type ExprVisitor interface {
 	VisitAssignExpr(n *Assign) (any, error)
 	// VisitTernary evaluates condition ? thenExpr : elseExpr
 	VisitTernary(n *Ternary) (any, error)
-
+	// VisitLogical evaluates a logical expression (and/or) using
+	// short-circuit semantics and returns the resulting value.
 	VisitLogical(n *Logical) (any, error)
 	// VisitBinary evaluates binary expressions like +, -, *, /, comparisons
 	VisitBinary(n *Binary) (any, error)
+	// VisitCall evaluates a function call
+	VisitCall(n *Call) (any, error)
 	// VisitUnary evaluates unary expressions like -x and !x
 	VisitUnary(n *Unary) (any, error)
 	// VisitGrouping evaluates expressions inside parentheses (...)
@@ -51,6 +54,12 @@ type Binary struct {
 	Right    Expr
 }
 
+type Call struct {
+	Callee    Expr
+	Paren     lexer.Token
+	Arguments []Expr
+}
+
 type Unary struct {
 	Operator lexer.Token
 	Right    Expr
@@ -82,6 +91,10 @@ func (n *Logical) Accept(v ExprVisitor) (any, error) {
 
 func (n *Binary) Accept(v ExprVisitor) (any, error) {
 	return v.VisitBinary(n)
+}
+
+func (n *Call) Accept(v ExprVisitor) (any, error) {
+	return v.VisitCall(n)
 }
 
 func (n *Unary) Accept(v ExprVisitor) (any, error) {

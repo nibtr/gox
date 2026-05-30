@@ -177,6 +177,7 @@ func (p *parser) forStatement() (ast.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	if increment != nil {
 		body = &ast.BlockStmt{
 			Statements: []ast.Stmt{
@@ -186,6 +187,7 @@ func (p *parser) forStatement() (ast.Stmt, error) {
 		}
 	}
 	if condition == nil {
+		// if no condition, infinite loop
 		condition = &ast.Literal{Value: true}
 	}
 	body = &ast.WhileStmt{Condition: condition, Body: body}
@@ -521,7 +523,27 @@ func (p *parser) unary() (ast.Expr, error) {
 		}, nil
 	}
 
-	return p.primary()
+	return p.call()
+}
+
+func (p *parser) call() (ast.Expr, error) {
+	expr, err := p.primary()
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		if p.match(lexer.LEFT_PAREN) {
+			expr, err = p.finishCall(expr)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			break
+		}
+	}
+
+	return expr, nil
 }
 
 func (p *parser) primary() (ast.Expr, error) {
@@ -558,6 +580,40 @@ func (p *parser) primary() (ast.Expr, error) {
 //
 // ======== HELPERS ========
 //
+
+func (p *parser) finishCall(callee ast.Expr) (ast.Expr, error) {
+	arguments := []ast.Expr{}
+
+	if !p.check(lexer.RIGHT_PAREN) {
+		for {
+			arg, err := p.expression()
+			if err != nil {
+				return nil, err
+			}
+			if len(arguments) >= 255 {
+				// TODO: currently fail-fast
+				// if want panic mode, need to use with synchronize
+				return nil, p.error(p.peek(), "can't have more than 255 arguments.")
+			}
+			arguments = append(arguments, arg)
+
+			if !p.match(lexer.COMMA) {
+				break
+			}
+		}
+	}
+
+	paren, err := p.consume(lexer.LEFT_PAREN, "expect ')' after arguments.")
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.Call{
+		Callee:    callee,
+		Paren:     *paren,
+		Arguments: arguments,
+	}, nil
+}
 
 // match checks whether the current token matches any of the given types.
 // If a match is found, it advances the parser to the next token and returns true.

@@ -58,9 +58,10 @@ equality   -> comparison ( ( "!=" | "==" ) comparison )* ;
 comparison -> term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term       -> factor ( ( "-" | "+" ) factor )* ;
 factor     -> unary ( ( "/" | "*" ) unary )* ;
+unary      -> ( "!" | "-" ) unary | call ;
 
-unary      -> ( "!" | "-" ) unary
-              | primary ;
+call       -> primary ( "(" arguments? ")" )* ;
+arguments  -> expression ( "," expression )* ;
 
 primary    -> NUMBER | STRING | "true" | "false" | "nil"
               | "(" expression ")"
@@ -96,3 +97,6 @@ printStmt   -> print expression ";" ;
 whileStmt   -> "while" expression statement ;
 block       -> "{" declaration* "}" ;
 ```
+
+# TODO:
+- break and continue in loops
