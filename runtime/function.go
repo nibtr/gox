@@ -25,10 +25,11 @@ func (f *Clock) String() string {
 // Function represents a general function
 type Function struct {
 	declaration *ast.FunctionStmt
+	closure     *Environment
 }
 
 func (f *Function) Call(i *interpreter, args []any) (any, error) {
-	env := NewEnvironmentWithEnclosing(i.globals)
+	env := NewEnvironmentWithEnclosing(f.closure)
 	for i := range f.declaration.Params {
 		// safe to assume assume the parameter and argument lists have the same length
 		// visitCallExpr() checks the arity before calling call()

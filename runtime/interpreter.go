@@ -252,7 +252,6 @@ func (v *interpreter) VisitCall(expr *ast.Call) (any, error) {
 		}
 	}
 
-	// TODO: callable interface
 	return function.Call(v, arguments)
 }
 
@@ -333,7 +332,7 @@ func (v *interpreter) VisitPrintStmt(stmt *ast.PrintStmt) error {
 }
 
 func (v *interpreter) VisitFunctionStmt(stmt *ast.FunctionStmt) error {
-	function := &Function{declaration: stmt}
+	function := &Function{declaration: stmt, closure: v.environment}
 	v.environment.define(stmt.Name.Lexeme, function)
 	return nil
 }
