@@ -1,0 +1,39 @@
+func fib(n) {
+  if n <= 1 return n;
+  return fib(n-2) + fib(n-1);
+}
+
+var n = 20;
+print fib(n); // 6765
+
+func factorial(n) {
+  if n <= 1 return 1;
+  return n * factorial(n - 1);
+}
+
+func sumFactorials(limit) {
+  var total = 0;
+  var i = 1;
+
+  while i <= limit {
+    total = total + factorial(i);
+    i = i + 1;
+  }
+
+  return total;
+}
+
+print sumFactorials(5); // 153
+
+func hanoi(n, from, to, aux) {
+  if n == 1 {
+    print from + " -> " + to;
+    return;
+  }
+
+  hanoi(n - 1, from, aux, to);
+  print from + " -> " + to;
+  hanoi(n - 1, aux, to, from);
+}
+
+hanoi(3, "A", "C", "B");

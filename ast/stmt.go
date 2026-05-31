@@ -10,6 +10,7 @@ type Stmt interface {
 
 type StmtVisitor interface {
 	VisitFunctionStmt(stmt *FunctionStmt) error
+	VisitReturnStmt(stmt *ReturnStmt) error
 	VisitExpressionStmt(stmt *ExpressionStmt) error
 	VisitIfStmt(stmt *IfStmt) error
 	VisitWhileStmt(stmt *WhileStmt) error
@@ -22,6 +23,11 @@ type FunctionStmt struct {
 	Name   lexer.Token
 	Params []lexer.Token
 	Body   []Stmt
+}
+
+type ReturnStmt struct {
+	Keyword lexer.Token
+	Value   Expr
 }
 
 type IfStmt struct {
@@ -54,6 +60,10 @@ type VarStmt struct {
 
 func (s *FunctionStmt) Accept(v StmtVisitor) error {
 	return v.VisitFunctionStmt(s)
+}
+
+func (s *ReturnStmt) Accept(v StmtVisitor) error {
+	return v.VisitReturnStmt(s)
 }
 
 func (s *IfStmt) Accept(v StmtVisitor) error {

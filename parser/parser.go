@@ -169,6 +169,9 @@ func (p *parser) statement() (ast.Stmt, error) {
 	if p.match(lexer.PRINT) {
 		return p.printStatement()
 	}
+	if p.match(lexer.RETURN) {
+		return p.returnStatement()
+	}
 	if p.match(lexer.WHILE) {
 		return p.whileStatement()
 	}
@@ -305,6 +308,24 @@ func (p *parser) printStatement() (ast.Stmt, error) {
 	}
 
 	return &ast.PrintStmt{Expression: value}, nil
+}
+
+func (p *parser) returnStatement() (ast.Stmt, error) {
+	keyword := p.previous()
+	var value ast.Expr
+	if !p.check(lexer.SEMICOLON) {
+		v, err := p.expression()
+		if err != nil {
+			return nil, err
+		}
+		value = v
+	}
+
+	_, err := p.consume(lexer.SEMICOLON, "expect ';' after return value")
+	if err != nil {
+		return nil, err
+	}
+	return &ast.ReturnStmt{Keyword: *keyword, Value: value}, nil
 }
 
 func (p *parser) block() ([]ast.Stmt, error) {

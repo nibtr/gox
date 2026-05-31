@@ -48,6 +48,15 @@ func (e *RuntimeError) Error() string {
 	return fmt.Sprintf("[line %d] error at '%s': %s\n", e.Token.Line, e.Token.Lexeme, e.Message)
 }
 
+// Return is a special error type for unwinding function returns
+type Return struct {
+	Value any
+}
+
+func (e *Return) Error() string {
+	return "interpreter return unwind"
+}
+
 func (v *interpreter) Eval(expr ast.Expr) (any, error) {
 	return v.evaluate(expr)
 }
@@ -321,6 +330,26 @@ func (v *interpreter) VisitPrintStmt(stmt *ast.PrintStmt) error {
 
 	fmt.Println(value)
 	return nil
+}
+
+func (v *interpreter) VisitFunctionStmt(stmt *ast.FunctionStmt) error {
+	function := &Function{declaration: stmt}
+	v.environment.define(stmt.Name.Lexeme, function)
+	return nil
+}
+
+func (v *interpreter) VisitReturnStmt(stmt *ast.ReturnStmt) error {
+	var value any
+	if stmt.Value != nil {
+		v, err := v.evaluate(stmt.Value)
+		if err != nil {
+			return err
+		}
+		value = v
+	}
+
+	// unwind stack to the call site
+	return &Return{Value: value}
 }
 
 func (v *interpreter) VisitBlockStmt(stmt *ast.BlockStmt) error {

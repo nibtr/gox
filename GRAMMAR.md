@@ -87,9 +87,10 @@ statement   -> exprStmt
              | forStmt
              | ifStmt
              | printStmt
+             | returnStmt
              | whileStmt
              | block ;
-}
+
 forStmt     -> "for" ( varDecl | exprStmt | ";" )
                expression? ";"
                expression? statement ;
@@ -99,6 +100,7 @@ ifStmt      -> "if" expression statement
 
 exprStmt    -> expression ";" ;
 printStmt   -> print expression ";" ;
+returnStmt  -> "return" expression? ";" ;
 whileStmt   -> "while" expression statement ;
 block       -> "{" declaration* "}" ;
 ```
