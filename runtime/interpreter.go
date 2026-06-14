@@ -57,6 +57,12 @@ func (e *Return) Error() string {
 	return "interpreter return unwind"
 }
 
+type BreakSignal struct{}
+
+func (e *BreakSignal) Error() string {
+	return "loop break signal"
+}
+
 func (v *interpreter) Eval(expr ast.Expr) (any, error) {
 	return v.evaluate(expr)
 }
@@ -310,15 +316,24 @@ func (v *interpreter) VisitWhileStmt(stmt *ast.WhileStmt) error {
 		}
 
 		if !isTruthy(cond) {
-			break
+			return nil
 		}
 
-		if err := v.execute(stmt.Body); err != nil {
+		err = v.execute(stmt.Body)
+
+		switch err.(type) {
+		case *BreakSignal:
+			return nil
+		case nil:
+			// normal execution
+		default:
 			return err
 		}
 	}
+}
 
-	return nil
+func (v *interpreter) VisitBreakStmt(stmt *ast.BreakStmt) error {
+	return &BreakSignal{}
 }
 
 func (v *interpreter) VisitPrintStmt(stmt *ast.PrintStmt) error {
@@ -357,6 +372,7 @@ func (v *interpreter) VisitBlockStmt(stmt *ast.BlockStmt) error {
 
 // ------------------- Helpers ---------------------
 
+// execute executes a statement
 func (v *interpreter) execute(stmt ast.Stmt) error {
 	return stmt.Accept(v)
 }

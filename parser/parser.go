@@ -9,8 +9,9 @@ import (
 )
 
 type parser struct {
-	tokens  []lexer.Token
-	current uint32
+	tokens    []lexer.Token
+	current   uint32
+	loopDepth uint32
 }
 
 type ParseError struct {
@@ -175,6 +176,9 @@ func (p *parser) statement() (ast.Stmt, error) {
 	if p.match(lexer.WHILE) {
 		return p.whileStatement()
 	}
+	if p.match(lexer.BREAK) {
+		return p.breakStatement()
+	}
 
 	if p.match(lexer.LEFT_BRACE) {
 		stmts, err := p.block()
@@ -190,6 +194,11 @@ func (p *parser) statement() (ast.Stmt, error) {
 }
 
 func (p *parser) forStatement() (ast.Stmt, error) {
+	p.loopDepth += 1
+	defer func() {
+		p.loopDepth -= 1
+	}()
+
 	var initializer ast.Stmt
 	if p.match(lexer.SEMICOLON) {
 		initializer = nil
@@ -285,6 +294,11 @@ func (p *parser) ifStatement() (ast.Stmt, error) {
 }
 
 func (p *parser) whileStatement() (ast.Stmt, error) {
+	p.loopDepth += 1
+	defer func() {
+		p.loopDepth -= 1
+	}()
+
 	condition, err := p.expression()
 	if err != nil {
 		return nil, err
@@ -295,6 +309,18 @@ func (p *parser) whileStatement() (ast.Stmt, error) {
 	}
 
 	return &ast.WhileStmt{Condition: condition, Body: body}, nil
+}
+
+func (p *parser) breakStatement() (ast.Stmt, error) {
+	if p.loopDepth == 0 {
+		return nil, p.error(p.peek(), "break outside loop.")
+	}
+	_, err := p.consume(lexer.SEMICOLON, "expect ';' after break.")
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.BreakStmt{}, nil
 }
 
 func (p *parser) printStatement() (ast.Stmt, error) {

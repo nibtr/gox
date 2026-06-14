@@ -74,6 +74,7 @@ const (
 	TRUE
 	VAR
 	WHILE
+	BREAK
 
 	EOF
 )
@@ -122,6 +123,7 @@ var tokenName = map[TokenType]string{
 	TRUE:   "TRUE",
 	VAR:    "VAR",
 	WHILE:  "WHILE",
+	BREAK:  "BREAK",
 
 	EOF: "EOF",
 }
@@ -143,4 +145,5 @@ var keywords = map[string]TokenType{
 	"true":   TRUE,
 	"var":    VAR,
 	"while":  WHILE,
+	"break":  BREAK,
 }
