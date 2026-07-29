@@ -15,6 +15,7 @@ type StmtVisitor interface {
 	VisitIfStmt(stmt *IfStmt) error
 	VisitWhileStmt(stmt *WhileStmt) error
 	VisitBreakStmt(stmt *BreakStmt) error
+	VisitContinueStmt(stmt *ContinueStmt) error
 	VisitPrintStmt(stmt *PrintStmt) error
 	VisitBlockStmt(stmt *BlockStmt) error
 	VisitVarStmt(stmt *VarStmt) error
@@ -40,9 +41,14 @@ type IfStmt struct {
 type WhileStmt struct {
 	Condition Expr
 	Body      Stmt
+	// Increment runs after Body on every iteration, including when Body
+	// exits via continue. Only set for desugared for-loops.
+	Increment Expr
 }
 
 type BreakStmt struct{}
+
+type ContinueStmt struct{}
 
 type ExpressionStmt struct {
 	Expression Expr
@@ -79,6 +85,10 @@ func (s *WhileStmt) Accept(v StmtVisitor) error {
 
 func (s *BreakStmt) Accept(v StmtVisitor) error {
 	return v.VisitBreakStmt(s)
+}
+
+func (s *ContinueStmt) Accept(v StmtVisitor) error {
+	return v.VisitContinueStmt(s)
 }
 
 func (s *ExpressionStmt) Accept(v StmtVisitor) error {

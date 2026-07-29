@@ -179,6 +179,9 @@ func (p *parser) statement() (ast.Stmt, error) {
 	if p.match(lexer.BREAK) {
 		return p.breakStatement()
 	}
+	if p.match(lexer.CONTINUE) {
+		return p.continueStatement()
+	}
 
 	if p.match(lexer.LEFT_BRACE) {
 		stmts, err := p.block()
@@ -244,19 +247,11 @@ func (p *parser) forStatement() (ast.Stmt, error) {
 		return nil, err
 	}
 
-	if increment != nil {
-		body = &ast.BlockStmt{
-			Statements: []ast.Stmt{
-				body,
-				&ast.ExpressionStmt{Expression: increment},
-			},
-		}
-	}
 	if condition == nil {
 		// if no condition, infinite loop
 		condition = &ast.Literal{Value: true}
 	}
-	body = &ast.WhileStmt{Condition: condition, Body: body}
+	body = &ast.WhileStmt{Condition: condition, Body: body, Increment: increment}
 	if initializer != nil {
 		body = &ast.BlockStmt{Statements: []ast.Stmt{
 			initializer,
@@ -321,6 +316,18 @@ func (p *parser) breakStatement() (ast.Stmt, error) {
 	}
 
 	return &ast.BreakStmt{}, nil
+}
+
+func (p *parser) continueStatement() (ast.Stmt, error) {
+	if p.loopDepth == 0 {
+		return nil, p.error(p.peek(), "continue outside loop.")
+	}
+	_, err := p.consume(lexer.SEMICOLON, "expect ';' after continue.")
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.ContinueStmt{}, nil
 }
 
 func (p *parser) printStatement() (ast.Stmt, error) {
