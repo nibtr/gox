@@ -63,6 +63,12 @@ func (e *BreakSignal) Error() string {
 	return "loop break signal"
 }
 
+type ContinueSignal struct{}
+
+func (e *ContinueSignal) Error() string {
+	return "loop continue signal"
+}
+
 func (v *interpreter) Eval(expr ast.Expr) (any, error) {
 	return v.evaluate(expr)
 }
@@ -324,16 +330,28 @@ func (v *interpreter) VisitWhileStmt(stmt *ast.WhileStmt) error {
 		switch err.(type) {
 		case *BreakSignal:
 			return nil
+		case *ContinueSignal:
+			// fall through to increment below
 		case nil:
 			// normal execution
 		default:
 			return err
+		}
+
+		if stmt.Increment != nil {
+			if _, err := v.evaluate(stmt.Increment); err != nil {
+				return err
+			}
 		}
 	}
 }
 
 func (v *interpreter) VisitBreakStmt(stmt *ast.BreakStmt) error {
 	return &BreakSignal{}
+}
+
+func (v *interpreter) VisitContinueStmt(stmt *ast.ContinueStmt) error {
+	return &ContinueSignal{}
 }
 
 func (v *interpreter) VisitPrintStmt(stmt *ast.PrintStmt) error {
