@@ -31,7 +31,7 @@ type Function struct {
 func (f *Function) Call(i *interpreter, args []any) (any, error) {
 	env := NewEnvironmentWithEnclosing(f.closure)
 	for i := range f.declaration.Params {
-		// safe to assume assume the parameter and argument lists have the same length
+		// safe to assume the parameter and argument lists have the same length
 		// visitCallExpr() checks the arity before calling call()
 		env.define(f.declaration.Params[i].Lexeme, args[i])
 	}
