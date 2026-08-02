@@ -14,7 +14,7 @@ func (f *Clock) Arity() int {
 	return 0
 }
 
-func (f *Clock) Call(i *interpreter, args []any) (any, error) {
+func (f *Clock) Call(i *Interpreter, args []any) (any, error) {
 	return float64(time.Now().Unix()), nil
 }
 
@@ -28,7 +28,7 @@ type Function struct {
 	closure     *Environment
 }
 
-func (f *Function) Call(i *interpreter, args []any) (any, error) {
+func (f *Function) Call(i *Interpreter, args []any) (any, error) {
 	env := NewEnvironmentWithEnclosing(f.closure)
 	for i := range f.declaration.Params {
 		// safe to assume the parameter and argument lists have the same length

@@ -19,20 +19,20 @@ const (
 	nativeClock = "clock"
 )
 
-type interpreter struct {
+type Interpreter struct {
 	// global environment
 	globals *Environment
 	// current environment
 	environment *Environment
 }
 
-func NewInterpreter() *interpreter {
+func NewInterpreter() *Interpreter {
 	globals := NewEnvironment()
 
 	// stuff native-functions in global scope
 	globals.define(nativeClock, &Clock{})
 
-	return &interpreter{
+	return &Interpreter{
 		globals:     globals,
 		environment: globals,
 	}
@@ -69,11 +69,11 @@ func (e *ContinueSignal) Error() string {
 	return "loop continue signal"
 }
 
-func (v *interpreter) Eval(expr ast.Expr) (any, error) {
+func (v *Interpreter) Eval(expr ast.Expr) (any, error) {
 	return v.evaluate(expr)
 }
 
-func (v *interpreter) Intepret(statements []ast.Stmt) error {
+func (v *Interpreter) Intepret(statements []ast.Stmt) error {
 	for _, s := range statements {
 		if err := v.execute(s); err != nil {
 			return err
@@ -84,7 +84,7 @@ func (v *interpreter) Intepret(statements []ast.Stmt) error {
 
 // ------------ Expression section -------------------
 
-func (v *interpreter) VisitAssignExpr(expr *ast.Assign) (any, error) {
+func (v *Interpreter) VisitAssignExpr(expr *ast.Assign) (any, error) {
 	value, err := v.evaluate(expr.Value)
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func (v *interpreter) VisitAssignExpr(expr *ast.Assign) (any, error) {
 	return value, nil
 }
 
-func (v *interpreter) VisitTernary(expr *ast.Ternary) (any, error) {
+func (v *Interpreter) VisitTernary(expr *ast.Ternary) (any, error) {
 	val, err := v.evaluate(expr.Condition)
 	if err != nil {
 		return nil, err
@@ -107,7 +107,7 @@ func (v *interpreter) VisitTernary(expr *ast.Ternary) (any, error) {
 	}
 }
 
-func (v *interpreter) VisitLogical(expr *ast.Logical) (any, error) {
+func (v *Interpreter) VisitLogical(expr *ast.Logical) (any, error) {
 	left, err := v.evaluate(expr.Left)
 	if err != nil {
 		return nil, err
@@ -126,7 +126,7 @@ func (v *interpreter) VisitLogical(expr *ast.Logical) (any, error) {
 	return v.evaluate(expr.Right)
 }
 
-func (v *interpreter) VisitBinary(expr *ast.Binary) (any, error) {
+func (v *Interpreter) VisitBinary(expr *ast.Binary) (any, error) {
 	left, err := v.evaluate(expr.Left)
 	if err != nil {
 		return nil, err
@@ -213,7 +213,7 @@ func (v *interpreter) VisitBinary(expr *ast.Binary) (any, error) {
 	panic("unreachable")
 }
 
-func (v *interpreter) VisitUnary(expr *ast.Unary) (any, error) {
+func (v *Interpreter) VisitUnary(expr *ast.Unary) (any, error) {
 	right, err := v.evaluate(expr.Right)
 	if err != nil {
 		return nil, err
@@ -233,7 +233,7 @@ func (v *interpreter) VisitUnary(expr *ast.Unary) (any, error) {
 	panic("unreachable")
 }
 
-func (v *interpreter) VisitCall(expr *ast.Call) (any, error) {
+func (v *Interpreter) VisitCall(expr *ast.Call) (any, error) {
 	callee, err := v.evaluate(expr.Callee)
 	if err != nil {
 		return nil, err
@@ -267,21 +267,21 @@ func (v *interpreter) VisitCall(expr *ast.Call) (any, error) {
 	return function.Call(v, arguments)
 }
 
-func (v *interpreter) VisitGrouping(expr *ast.Grouping) (any, error) {
+func (v *Interpreter) VisitGrouping(expr *ast.Grouping) (any, error) {
 	return v.evaluate(expr.Expression)
 }
 
-func (v *interpreter) VisitLiteral(expr *ast.Literal) (any, error) {
+func (v *Interpreter) VisitLiteral(expr *ast.Literal) (any, error) {
 	return expr.Value, nil
 }
 
-func (v *interpreter) VisitVariable(expr *ast.Variable) (any, error) {
+func (v *Interpreter) VisitVariable(expr *ast.Variable) (any, error) {
 	return v.environment.get(expr.Name)
 }
 
 // ----------- Statement section -------------------
 
-func (v *interpreter) VisitVarStmt(stmt *ast.VarStmt) error {
+func (v *Interpreter) VisitVarStmt(stmt *ast.VarStmt) error {
 	var value any
 	if stmt.Initializer != nil {
 		v, err := v.evaluate(stmt.Initializer)
@@ -295,12 +295,12 @@ func (v *interpreter) VisitVarStmt(stmt *ast.VarStmt) error {
 	return nil
 }
 
-func (v *interpreter) VisitExpressionStmt(stmt *ast.ExpressionStmt) error {
+func (v *Interpreter) VisitExpressionStmt(stmt *ast.ExpressionStmt) error {
 	_, err := v.evaluate(stmt.Expression)
 	return err
 }
 
-func (v *interpreter) VisitIfStmt(stmt *ast.IfStmt) error {
+func (v *Interpreter) VisitIfStmt(stmt *ast.IfStmt) error {
 	cond, err := v.evaluate(stmt.Condition)
 	if err != nil {
 		return err
@@ -314,7 +314,7 @@ func (v *interpreter) VisitIfStmt(stmt *ast.IfStmt) error {
 	return nil
 }
 
-func (v *interpreter) VisitWhileStmt(stmt *ast.WhileStmt) error {
+func (v *Interpreter) VisitWhileStmt(stmt *ast.WhileStmt) error {
 	for {
 		cond, err := v.evaluate(stmt.Condition)
 		if err != nil {
@@ -346,15 +346,15 @@ func (v *interpreter) VisitWhileStmt(stmt *ast.WhileStmt) error {
 	}
 }
 
-func (v *interpreter) VisitBreakStmt(stmt *ast.BreakStmt) error {
+func (v *Interpreter) VisitBreakStmt(stmt *ast.BreakStmt) error {
 	return &BreakSignal{}
 }
 
-func (v *interpreter) VisitContinueStmt(stmt *ast.ContinueStmt) error {
+func (v *Interpreter) VisitContinueStmt(stmt *ast.ContinueStmt) error {
 	return &ContinueSignal{}
 }
 
-func (v *interpreter) VisitPrintStmt(stmt *ast.PrintStmt) error {
+func (v *Interpreter) VisitPrintStmt(stmt *ast.PrintStmt) error {
 	value, err := v.evaluate(stmt.Expression)
 	if err != nil {
 		return err
@@ -364,13 +364,13 @@ func (v *interpreter) VisitPrintStmt(stmt *ast.PrintStmt) error {
 	return nil
 }
 
-func (v *interpreter) VisitFunctionStmt(stmt *ast.FunctionStmt) error {
+func (v *Interpreter) VisitFunctionStmt(stmt *ast.FunctionStmt) error {
 	function := &Function{declaration: stmt, closure: v.environment}
 	v.environment.define(stmt.Name.Lexeme, function)
 	return nil
 }
 
-func (v *interpreter) VisitReturnStmt(stmt *ast.ReturnStmt) error {
+func (v *Interpreter) VisitReturnStmt(stmt *ast.ReturnStmt) error {
 	var value any
 	if stmt.Value != nil {
 		v, err := v.evaluate(stmt.Value)
@@ -384,23 +384,23 @@ func (v *interpreter) VisitReturnStmt(stmt *ast.ReturnStmt) error {
 	return &Return{Value: value}
 }
 
-func (v *interpreter) VisitBlockStmt(stmt *ast.BlockStmt) error {
+func (v *Interpreter) VisitBlockStmt(stmt *ast.BlockStmt) error {
 	return v.executeBlock(stmt.Statements, NewEnvironmentWithEnclosing(v.environment))
 }
 
 // ------------------- Helpers ---------------------
 
 // execute executes a statement
-func (v *interpreter) execute(stmt ast.Stmt) error {
+func (v *Interpreter) execute(stmt ast.Stmt) error {
 	return stmt.Accept(v)
 }
 
 // evaluate dispatches AST node evaluation
-func (v *interpreter) evaluate(e ast.Expr) (any, error) {
+func (v *Interpreter) evaluate(e ast.Expr) (any, error) {
 	return e.Accept(v)
 }
 
-func (v *interpreter) executeBlock(stmts []ast.Stmt, env *Environment) error {
+func (v *Interpreter) executeBlock(stmts []ast.Stmt, env *Environment) error {
 	// restore previous environment if error occurs
 	previous := v.environment
 	defer func() {
