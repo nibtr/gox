@@ -1,8 +1,11 @@
 package resolver
 
 import (
+	"slices"
+
 	"github.com/nibtr/gox/ast"
 	"github.com/nibtr/gox/lexer"
+	"github.com/nibtr/gox/parser"
 	"github.com/nibtr/gox/runtime"
 )
 
@@ -44,6 +47,18 @@ func (r *Resolver) VisitVarStmt(stmt *ast.VarStmt) error {
 	return nil
 }
 
+func (r *Resolver) VisitVariable(expr *ast.Variable) (any, error) {
+	if len(r.Scopes) != 0 && !r.Scopes[0][expr.Name.Lexeme] {
+		return nil, &parser.ParseError{
+			Token:   &expr.Name,
+			Message: "Can't read local variable in its own initializer.",
+		}
+	}
+
+	r.resolveLocal(expr, expr.Name)
+	return nil, nil
+}
+
 // ------- Helpers ---------
 
 func (r *Resolver) resolveStmts(stmts []ast.Stmt) {
@@ -83,4 +98,13 @@ func (r *Resolver) define(name *lexer.Token) {
 	}
 
 	r.Scopes[0][name.Lexeme] = true
+}
+
+func (r *Resolver) resolveLocal(expr ast.Expr, name *lexer.Token) {
+	for i := range slices.Backward(r.Scopes) {
+		if _, ok := r.Scopes[i][name.Lexeme]; ok {
+			r.Interpreter.Resolve(expr, len(r.Scopes)-1-i)
+			return
+		}
+	}
 }

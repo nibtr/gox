@@ -8,12 +8,12 @@ import (
 const NULL_CHARACTER byte = '\x00'
 
 type LexerError struct {
-	message string
-	line    uint32
+	Message string
+	Line    uint32
 }
 
 func (e *LexerError) Error() string {
-	return fmt.Sprintf("[line %v] - error %v: %v\n", e.line, "", e.message)
+	return fmt.Sprintf("[line %v] - error %v: %v\n", e.Line, "", e.Message)
 }
 
 type lexer struct {
@@ -163,8 +163,8 @@ func (l *lexer) scanToken() *LexerError {
 			l.identifier()
 		} else {
 			return &LexerError{
-				message: "Unexpected character",
-				line:    l.line,
+				Message: "Unexpected character",
+				Line:    l.line,
 			}
 		}
 	}
@@ -222,8 +222,8 @@ func (l *lexer) string() *LexerError {
 
 	if l.isAtEnd() {
 		return &LexerError{
-			message: "Unterminated string",
-			line:    l.line,
+			Message: "Unterminated string",
+			Line:    l.line,
 		}
 	}
 
