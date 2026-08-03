@@ -33,7 +33,7 @@ func NewResolver(i *runtime.Interpreter) *Resolver {
 
 func (r *Resolver) VisitBlockStmt(stmt *ast.BlockStmt) error {
 	r.beginScope()
-	r.resolveStmts(stmt.Statements)
+	r.ResolveStmts(stmt.Statements)
 	r.endScope()
 	return nil
 }
@@ -156,7 +156,7 @@ func (r *Resolver) VisitTernary(expr *ast.Ternary) (any, error) {
 
 // ------- Helpers ---------
 
-func (r *Resolver) resolveStmts(stmts []ast.Stmt) {
+func (r *Resolver) ResolveStmts(stmts []ast.Stmt) {
 	for _, s := range stmts {
 		r.resolveStmt(s)
 	}
@@ -210,6 +210,6 @@ func (r *Resolver) resolveFunction(f *ast.FunctionStmt) {
 		r.declare(&param)
 		r.define(&param)
 	}
-	r.resolveStmts(f.Body)
+	r.ResolveStmts(f.Body)
 	r.endScope()
 }

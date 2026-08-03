@@ -288,7 +288,7 @@ func (v *Interpreter) VisitLiteral(expr *ast.Literal) (any, error) {
 }
 
 func (v *Interpreter) VisitVariable(expr *ast.Variable) (any, error) {
-	return v.lookUpVariable(expr.Name, expr)
+	return v.lookUpVariable(&expr.Name, expr)
 }
 
 // ----------- Statement section -------------------
