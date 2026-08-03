@@ -55,7 +55,102 @@ func (r *Resolver) VisitVariable(expr *ast.Variable) (any, error) {
 		}
 	}
 
-	r.resolveLocal(expr, expr.Name)
+	r.resolveLocal(expr, &expr.Name)
+	return nil, nil
+}
+
+func (r *Resolver) VisitAssignExpr(expr *ast.Assign) (any, error) {
+	r.resolveExpr(expr.Value)
+	r.resolveLocal(expr, &expr.Name)
+	return nil, nil
+}
+
+func (r *Resolver) VisitFunctionStmt(stmt *ast.FunctionStmt) error {
+	r.declare(&stmt.Name)
+	r.define(&stmt.Name)
+	r.resolveFunction(stmt)
+	return nil
+}
+
+func (r *Resolver) VisitExpressionStmt(stmt *ast.ExpressionStmt) error {
+	r.resolveExpr(stmt.Expression)
+	return nil
+}
+
+func (r *Resolver) VisitIfStmt(stmt *ast.IfStmt) error {
+	r.resolveExpr(stmt.Condition)
+	r.resolveStmt(stmt.ThenBranch)
+	if stmt.ElseBranch != nil {
+		r.resolveStmt(stmt.ElseBranch)
+	}
+	return nil
+}
+
+func (r *Resolver) VisitPrintStmt(stmt *ast.PrintStmt) error {
+	r.resolveExpr(stmt.Expression)
+	return nil
+}
+
+func (r *Resolver) VisitReturnStmt(stmt *ast.ReturnStmt) error {
+	if stmt.Value != nil {
+		r.resolveExpr(stmt.Value)
+	}
+	return nil
+}
+
+func (r *Resolver) VisitWhileStmt(stmt *ast.WhileStmt) error {
+	r.resolveExpr(stmt.Condition)
+	r.resolveStmt(stmt.Body)
+	if stmt.Increment != nil {
+		r.resolveExpr(stmt.Increment)
+	}
+
+	return nil
+}
+
+func (r *Resolver) VisitBreakStmt(stmt *ast.BreakStmt) error       { return nil }
+func (r *Resolver) VisitContinueStmt(stmt *ast.ContinueStmt) error { return nil }
+
+func (r *Resolver) VisitBinary(expr *ast.Binary) (any, error) {
+	r.resolveExpr(expr.Left)
+	r.resolveExpr(expr.Right)
+	return nil, nil
+}
+
+func (r *Resolver) VisitCall(expr *ast.Call) (any, error) {
+	r.resolveExpr(expr.Callee)
+	for _, arg := range expr.Arguments {
+		r.resolveExpr(arg)
+	}
+	return nil, nil
+}
+
+func (r *Resolver) VisitGrouping(expr *ast.Grouping) (any, error) {
+	r.resolveExpr(expr.Expression)
+	return nil, nil
+}
+
+func (r *Resolver) VisitLiteral(expr *ast.Literal) (any, error) {
+	return nil, nil
+}
+
+func (r *Resolver) VisitLogical(expr *ast.Logical) (any, error) {
+	r.resolveExpr(expr.Left)
+	r.resolveExpr(expr.Right)
+	return nil, nil
+}
+
+func (r *Resolver) VisitUnary(expr *ast.Unary) (any, error) {
+	r.resolveExpr(expr.Right)
+	return nil, nil
+}
+
+func (r *Resolver) VisitTernary(expr *ast.Ternary) (any, error) {
+	r.resolveExpr(expr.Condition)
+	r.resolveExpr(expr.ThenExpr)
+	if expr.ElseExpr != nil {
+		r.resolveExpr(expr.ElseExpr)
+	}
 	return nil, nil
 }
 
@@ -107,4 +202,14 @@ func (r *Resolver) resolveLocal(expr ast.Expr, name *lexer.Token) {
 			return
 		}
 	}
+}
+
+func (r *Resolver) resolveFunction(f *ast.FunctionStmt) {
+	r.beginScope()
+	for _, param := range f.Params {
+		r.declare(&param)
+		r.define(&param)
+	}
+	r.resolveStmts(f.Body)
+	r.endScope()
 }
