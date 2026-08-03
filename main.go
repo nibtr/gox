@@ -100,7 +100,11 @@ func run(source string, isRepl bool) error {
 
 	// semantic analysis
 	r := resolver.NewResolver(intrp)
-	r.ResolveStmts(statements)
+	err = r.ResolveStmts(statements)
+	if err != nil {
+		fmt.Printf("%v\n", err)
+		return err
+	}
 
 	err = intrp.Intepret(statements)
 	if err != nil {

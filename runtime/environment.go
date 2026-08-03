@@ -74,7 +74,7 @@ func (e *Environment) getAt(distance int, name string) (any, error) {
 
 func (e *Environment) ancestor(distance int) *Environment {
 	env := e
-	for i := 0; i < distance; i++ {
+	for range distance {
 		env = env.enclosing
 	}
 	return env

@@ -33,25 +33,30 @@ func NewResolver(i *runtime.Interpreter) *Resolver {
 
 func (r *Resolver) VisitBlockStmt(stmt *ast.BlockStmt) error {
 	r.beginScope()
-	r.ResolveStmts(stmt.Statements)
-	r.endScope()
-	return nil
+	defer r.endScope()
+	return r.ResolveStmts(stmt.Statements)
 }
 
 func (r *Resolver) VisitVarStmt(stmt *ast.VarStmt) error {
-	r.declare(&stmt.Name)
+	if err := r.declare(&stmt.Name); err != nil {
+		return err
+	}
 	if stmt.Initializer != nil {
-		r.resolveExpr(stmt.Initializer)
+		if err := r.resolveExpr(stmt.Initializer); err != nil {
+			return err
+		}
 	}
 	r.define(&stmt.Name)
 	return nil
 }
 
 func (r *Resolver) VisitVariable(expr *ast.Variable) (any, error) {
-	if len(r.Scopes) != 0 && !r.Scopes[0][expr.Name.Lexeme] {
-		return nil, &parser.ParseError{
-			Token:   &expr.Name,
-			Message: "Can't read local variable in its own initializer.",
+	if len(r.Scopes) != 0 {
+		if defined, ok := r.Scopes[len(r.Scopes)-1][expr.Name.Lexeme]; ok && !defined {
+			return nil, &parser.ParseError{
+				Token:   &expr.Name,
+				Message: "Can't read local variable in its own initializer.",
+			}
 		}
 	}
 
@@ -60,49 +65,72 @@ func (r *Resolver) VisitVariable(expr *ast.Variable) (any, error) {
 }
 
 func (r *Resolver) VisitAssignExpr(expr *ast.Assign) (any, error) {
-	r.resolveExpr(expr.Value)
+	if err := r.resolveExpr(expr.Value); err != nil {
+		return nil, err
+	}
+
 	r.resolveLocal(expr, &expr.Name)
 	return nil, nil
 }
 
 func (r *Resolver) VisitFunctionStmt(stmt *ast.FunctionStmt) error {
-	r.declare(&stmt.Name)
+	if err := r.declare(&stmt.Name); err != nil {
+		return err
+	}
 	r.define(&stmt.Name)
-	r.resolveFunction(stmt)
+	if err := r.resolveFunction(stmt); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (r *Resolver) VisitExpressionStmt(stmt *ast.ExpressionStmt) error {
-	r.resolveExpr(stmt.Expression)
-	return nil
+	return r.resolveExpr(stmt.Expression)
 }
 
 func (r *Resolver) VisitIfStmt(stmt *ast.IfStmt) error {
-	r.resolveExpr(stmt.Condition)
-	r.resolveStmt(stmt.ThenBranch)
-	if stmt.ElseBranch != nil {
-		r.resolveStmt(stmt.ElseBranch)
+	if err := r.resolveExpr(stmt.Condition); err != nil {
+		return err
 	}
+
+	if err := r.resolveStmt(stmt.ThenBranch); err != nil {
+		return err
+	}
+
+	if stmt.ElseBranch != nil {
+		if err := r.resolveStmt(stmt.ElseBranch); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 func (r *Resolver) VisitPrintStmt(stmt *ast.PrintStmt) error {
-	r.resolveExpr(stmt.Expression)
-	return nil
+	return r.resolveExpr(stmt.Expression)
 }
 
 func (r *Resolver) VisitReturnStmt(stmt *ast.ReturnStmt) error {
 	if stmt.Value != nil {
-		r.resolveExpr(stmt.Value)
+		return r.resolveExpr(stmt.Value)
 	}
+
 	return nil
 }
 
 func (r *Resolver) VisitWhileStmt(stmt *ast.WhileStmt) error {
-	r.resolveExpr(stmt.Condition)
-	r.resolveStmt(stmt.Body)
+	if err := r.resolveExpr(stmt.Condition); err != nil {
+		return err
+	}
+
+	if err := r.resolveStmt(stmt.Body); err != nil {
+		return err
+	}
+
 	if stmt.Increment != nil {
-		r.resolveExpr(stmt.Increment)
+		if err := r.resolveExpr(stmt.Increment); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -112,22 +140,33 @@ func (r *Resolver) VisitBreakStmt(stmt *ast.BreakStmt) error       { return nil 
 func (r *Resolver) VisitContinueStmt(stmt *ast.ContinueStmt) error { return nil }
 
 func (r *Resolver) VisitBinary(expr *ast.Binary) (any, error) {
-	r.resolveExpr(expr.Left)
-	r.resolveExpr(expr.Right)
+	if err := r.resolveExpr(expr.Left); err != nil {
+		return nil, err
+	}
+
+	if err := r.resolveExpr(expr.Right); err != nil {
+		return nil, err
+	}
+
 	return nil, nil
 }
 
 func (r *Resolver) VisitCall(expr *ast.Call) (any, error) {
-	r.resolveExpr(expr.Callee)
-	for _, arg := range expr.Arguments {
-		r.resolveExpr(arg)
+	if err := r.resolveExpr(expr.Callee); err != nil {
+		return nil, err
 	}
+
+	for _, arg := range expr.Arguments {
+		if err := r.resolveExpr(arg); err != nil {
+			return nil, err
+		}
+	}
+
 	return nil, nil
 }
 
 func (r *Resolver) VisitGrouping(expr *ast.Grouping) (any, error) {
-	r.resolveExpr(expr.Expression)
-	return nil, nil
+	return nil, r.resolveExpr(expr.Expression)
 }
 
 func (r *Resolver) VisitLiteral(expr *ast.Literal) (any, error) {
@@ -135,39 +174,57 @@ func (r *Resolver) VisitLiteral(expr *ast.Literal) (any, error) {
 }
 
 func (r *Resolver) VisitLogical(expr *ast.Logical) (any, error) {
-	r.resolveExpr(expr.Left)
-	r.resolveExpr(expr.Right)
+	if err := r.resolveExpr(expr.Left); err != nil {
+		return nil, err
+	}
+
+	if err := r.resolveExpr(expr.Right); err != nil {
+		return nil, err
+	}
+
 	return nil, nil
 }
 
 func (r *Resolver) VisitUnary(expr *ast.Unary) (any, error) {
-	r.resolveExpr(expr.Right)
-	return nil, nil
+	return nil, r.resolveExpr(expr.Right)
 }
 
 func (r *Resolver) VisitTernary(expr *ast.Ternary) (any, error) {
-	r.resolveExpr(expr.Condition)
-	r.resolveExpr(expr.ThenExpr)
-	if expr.ElseExpr != nil {
-		r.resolveExpr(expr.ElseExpr)
+	if err := r.resolveExpr(expr.Condition); err != nil {
+		return nil, err
 	}
+
+	if err := r.resolveExpr(expr.ThenExpr); err != nil {
+		return nil, err
+	}
+
+	if expr.ElseExpr != nil {
+		if err := r.resolveExpr(expr.ElseExpr); err != nil {
+			return nil, err
+		}
+	}
+
 	return nil, nil
 }
 
 // ------- Helpers ---------
 
-func (r *Resolver) ResolveStmts(stmts []ast.Stmt) {
-	for _, s := range stmts {
-		r.resolveStmt(s)
+func (r *Resolver) ResolveStmts(stmts []ast.Stmt) error {
+	for _, stmt := range stmts {
+		if err := r.resolveStmt(stmt); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-func (r *Resolver) resolveStmt(stmt ast.Stmt) {
-	stmt.Accept(r)
+func (r *Resolver) resolveStmt(stmt ast.Stmt) error {
+	return stmt.Accept(r)
 }
 
-func (r *Resolver) resolveExpr(expr ast.Expr) {
-	expr.Accept(r)
+func (r *Resolver) resolveExpr(expr ast.Expr) error {
+	_, err := expr.Accept(r)
+	return err
 }
 
 func (r *Resolver) beginScope() {
@@ -178,13 +235,21 @@ func (r *Resolver) endScope() {
 	r.Scopes = r.Scopes[:len(r.Scopes)-1] // pop
 }
 
-func (r *Resolver) declare(name *lexer.Token) {
+func (r *Resolver) declare(name *lexer.Token) error {
 	if len(r.Scopes) == 0 {
-		return
+		return nil
 	}
 
-	scope := r.Scopes[0] // peek
+	scope := r.Scopes[len(r.Scopes)-1] // peek
+	if _, ok := scope[name.Lexeme]; ok {
+		return &parser.ParseError{
+			Token:   name,
+			Message: "Already variable with this name in this scope.",
+		}
+	}
+
 	scope[name.Lexeme] = false
+	return nil
 }
 
 func (r *Resolver) define(name *lexer.Token) {
@@ -192,7 +257,7 @@ func (r *Resolver) define(name *lexer.Token) {
 		return
 	}
 
-	r.Scopes[0][name.Lexeme] = true
+	r.Scopes[len(r.Scopes)-1][name.Lexeme] = true
 }
 
 func (r *Resolver) resolveLocal(expr ast.Expr, name *lexer.Token) {
@@ -204,12 +269,16 @@ func (r *Resolver) resolveLocal(expr ast.Expr, name *lexer.Token) {
 	}
 }
 
-func (r *Resolver) resolveFunction(f *ast.FunctionStmt) {
+func (r *Resolver) resolveFunction(f *ast.FunctionStmt) error {
 	r.beginScope()
+	defer r.endScope()
+
 	for _, param := range f.Params {
-		r.declare(&param)
+		if err := r.declare(&param); err != nil {
+			return err
+		}
 		r.define(&param)
 	}
-	r.ResolveStmts(f.Body)
-	r.endScope()
+
+	return r.ResolveStmts(f.Body)
 }

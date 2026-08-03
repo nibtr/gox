@@ -8,3 +8,8 @@ var a = "global";
   var a = "block";
   showA(); // block -> bug
 }
+
+func bad() {
+  var a = "first";
+  var a = "second";
+}
