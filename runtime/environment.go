@@ -46,6 +46,10 @@ func (e *Environment) assign(name lexer.Token, value any) error {
 	}
 }
 
+func (e *Environment) assignAt(distance int, name lexer.Token, value any) {
+	e.ancestor(distance).values[name.Lexeme] = value
+}
+
 func (e *Environment) get(name lexer.Token) (any, error) {
 	v, ok := e.values[name.Lexeme]
 	if ok {
@@ -60,4 +64,18 @@ func (e *Environment) get(name lexer.Token) (any, error) {
 		Token:   &name,
 		Message: fmt.Sprintf("Undefined variable '%s'.", name.Lexeme),
 	}
+}
+
+func (e *Environment) getAt(distance int, name string) (any, error) {
+	// no need check for undefined variable because we know
+	// it will be because the resolver already found it before
+	return e.ancestor(distance).values[name], nil
+}
+
+func (e *Environment) ancestor(distance int) *Environment {
+	env := e
+	for i := 0; i < distance; i++ {
+		env = env.enclosing
+	}
+	return env
 }

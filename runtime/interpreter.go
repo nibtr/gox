@@ -24,6 +24,7 @@ type Interpreter struct {
 	globals *Environment
 	// current environment
 	environment *Environment
+	locals      map[ast.Expr]int
 }
 
 func NewInterpreter() *Interpreter {
@@ -35,6 +36,7 @@ func NewInterpreter() *Interpreter {
 	return &Interpreter{
 		globals:     globals,
 		environment: globals,
+		locals:      make(map[ast.Expr]int),
 	}
 }
 
@@ -82,6 +84,10 @@ func (v *Interpreter) Intepret(statements []ast.Stmt) error {
 	return nil
 }
 
+func (v *Interpreter) Resolve(expr ast.Expr, depth int) {
+	v.locals[expr] = depth
+}
+
 // ------------ Expression section -------------------
 
 func (v *Interpreter) VisitAssignExpr(expr *ast.Assign) (any, error) {
@@ -89,9 +95,15 @@ func (v *Interpreter) VisitAssignExpr(expr *ast.Assign) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := v.environment.assign(expr.Name, value); err != nil {
-		return nil, err
+
+	if distance, ok := v.locals[expr]; ok {
+		v.environment.assignAt(distance, expr.Name, value)
+	} else {
+		if err := v.globals.assign(expr.Name, value); err != nil {
+			return nil, err
+		}
 	}
+
 	return value, nil
 }
 
@@ -276,7 +288,7 @@ func (v *Interpreter) VisitLiteral(expr *ast.Literal) (any, error) {
 }
 
 func (v *Interpreter) VisitVariable(expr *ast.Variable) (any, error) {
-	return v.environment.get(expr.Name)
+	return v.lookUpVariable(expr.Name, expr)
 }
 
 // ----------- Statement section -------------------
@@ -415,6 +427,14 @@ func (v *Interpreter) executeBlock(stmts []ast.Stmt, env *Environment) error {
 	}
 
 	return nil
+}
+
+func (v *Interpreter) lookUpVariable(name *lexer.Token, expr ast.Expr) (any, error) {
+	if distance, ok := v.locals[expr]; ok {
+		return v.environment.getAt(distance, name.Lexeme)
+	} else {
+		return v.globals.get(*name)
+	}
 }
 
 // toFloat64 converts supported numeric types into float64
