@@ -9,6 +9,13 @@ import (
 	"github.com/nibtr/gox/runtime"
 )
 
+type FunctionType int
+
+const (
+	None FunctionType = iota
+	Function
+)
+
 // Resolver is a struct that performs sematic-analysis in a new
 // single pass over the tree to resolve all of the variables it contains.
 //
@@ -17,7 +24,8 @@ import (
 type Resolver struct {
 	Interpreter *runtime.Interpreter
 	// The scope stack used for local block scopes.
-	Scopes []scope
+	Scopes          []scope
+	CurrentFunction FunctionType
 }
 
 // scope behaves like a linked list - the chain of Environment objects.
@@ -27,7 +35,9 @@ type scope map[string]bool
 
 func NewResolver(i *runtime.Interpreter) *Resolver {
 	return &Resolver{
-		Interpreter: i,
+		Interpreter:     i,
+		Scopes:          make([]scope, 0),
+		CurrentFunction: None,
 	}
 }
 
@@ -78,7 +88,7 @@ func (r *Resolver) VisitFunctionStmt(stmt *ast.FunctionStmt) error {
 		return err
 	}
 	r.define(&stmt.Name)
-	if err := r.resolveFunction(stmt); err != nil {
+	if err := r.resolveFunction(stmt, Function); err != nil {
 		return err
 	}
 	return nil
@@ -111,6 +121,12 @@ func (r *Resolver) VisitPrintStmt(stmt *ast.PrintStmt) error {
 }
 
 func (r *Resolver) VisitReturnStmt(stmt *ast.ReturnStmt) error {
+	if r.CurrentFunction == None {
+		return &parser.ParseError{
+			Token:   &stmt.Keyword,
+			Message: "Can't return from top-level code.",
+		}
+	}
 	if stmt.Value != nil {
 		return r.resolveExpr(stmt.Value)
 	}
@@ -269,9 +285,15 @@ func (r *Resolver) resolveLocal(expr ast.Expr, name *lexer.Token) {
 	}
 }
 
-func (r *Resolver) resolveFunction(f *ast.FunctionStmt) error {
+func (r *Resolver) resolveFunction(f *ast.FunctionStmt, funcType FunctionType) error {
+	enclosingFunc := r.CurrentFunction
+	r.CurrentFunction = funcType
+
 	r.beginScope()
-	defer r.endScope()
+	defer func() {
+		r.endScope()
+		r.CurrentFunction = enclosingFunc
+	}()
 
 	for _, param := range f.Params {
 		if err := r.declare(&param); err != nil {
