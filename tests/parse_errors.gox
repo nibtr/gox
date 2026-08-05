@@ -1,0 +1,16 @@
+// exercises the recovering parser: several unrelated syntax errors,
+// each should be reported independently in one run (not just the first).
+
+var a = ;
+print "reached after error 1";
+
+var 123 = 5;
+print "reached after error 2";
+
+if (true print "missing paren";
+
+for var i = 0 i < 3; i = i + 1 {
+  print i;
+}
+
+print "reached end of file";
