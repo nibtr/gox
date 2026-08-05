@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 
@@ -12,6 +13,8 @@ type parser struct {
 	tokens    []lexer.Token
 	current   uint32
 	loopDepth uint32
+	// errors accumulates recovered parse errors so ParseProgram can report all of them.
+	errors []error
 }
 
 type ParseError struct {
@@ -44,51 +47,42 @@ func (p *parser) ParseExpression() (ast.Expr, error) {
 func (p *parser) ParseProgram() ([]ast.Stmt, error) {
 	statements := []ast.Stmt{}
 	for !p.IsAtEnd() {
-		stmt, err := p.declaration()
-		if err != nil {
-			return nil, err
+		stmt := p.declaration()
+		if stmt != nil {
+			statements = append(statements, stmt)
 		}
+	}
 
-		statements = append(statements, stmt)
+	if len(p.errors) > 0 {
+		return nil, errors.Join(p.errors...)
 	}
 
 	return statements, nil
 }
 
-func (p *parser) declaration() (ast.Stmt, error) {
-	// TODO: decide parser error strategy:
-	// 1: fail-fast (current):
-	//   - return err immediately and DO NOT call p.synchronize()
-	//   - simplifies design, single error per run, no partial AST execution
-	//
-	// 2: recovering parser:
-	//   - call p.synchronize()
-	//   - continue parsing after errors
-	//   - requires returning aggregated errors
+// declaration recovers from parse errors at statement boundaries: on error
+// it records the error, synchronizes to the next statement, and returns nil
+// so the caller (ParseProgram or block) just skips it and keeps parsing.
+func (p *parser) declaration() ast.Stmt {
+	var stmt ast.Stmt
+	var err error
 
-	if p.match(lexer.FUNC) {
-		v, err := p.function("function")
-		if err != nil {
-			return nil, err
-		}
-		return v, nil
+	switch {
+	case p.match(lexer.FUNC):
+		stmt, err = p.function("function")
+	case p.match(lexer.VAR):
+		stmt, err = p.varDeclaration()
+	default:
+		stmt, err = p.statement()
 	}
 
-	if p.match(lexer.VAR) {
-		v, err := p.varDeclaration()
-		if err != nil {
-			// p.synchronize()
-			return nil, err
-		}
-		return v, nil
-	}
-
-	v, err := p.statement()
 	if err != nil {
-		// p.synchronize()
-		return nil, err
+		p.errors = append(p.errors, err)
+		p.synchronize()
+		return nil
 	}
-	return v, nil
+
+	return stmt
 }
 
 func (p *parser) function(kind string) (ast.Stmt, error) {
@@ -364,11 +358,10 @@ func (p *parser) returnStatement() (ast.Stmt, error) {
 func (p *parser) block() ([]ast.Stmt, error) {
 	stmts := []ast.Stmt{}
 	for !p.check(lexer.RIGHT_BRACE) && !p.IsAtEnd() {
-		dec, err := p.declaration()
-		if err != nil {
-			return nil, err
+		dec := p.declaration()
+		if dec != nil {
+			stmts = append(stmts, dec)
 		}
-		stmts = append(stmts, dec)
 	}
 	if _, err := p.consume(lexer.RIGHT_BRACE, "expect '}' after block."); err != nil {
 		return nil, err
@@ -390,7 +383,6 @@ func (p *parser) expressionStatement() (ast.Stmt, error) {
 	return &ast.ExpressionStmt{Expression: e}, nil
 }
 
-// TODO: remember to synchronize errors
 func (p *parser) synchronize() {
 	p.advance()
 
@@ -400,14 +392,8 @@ func (p *parser) synchronize() {
 		}
 
 		switch p.peek().TokenType {
-		case lexer.CLASS:
-		case lexer.FUNC:
-		case lexer.VAR:
-		case lexer.FOR:
-		case lexer.IF:
-		case lexer.WHILE:
-		case lexer.PRINT:
-		case lexer.RETURN:
+		case lexer.CLASS, lexer.FUNC, lexer.VAR, lexer.FOR, lexer.IF,
+			lexer.WHILE, lexer.PRINT, lexer.RETURN:
 			return
 		}
 
