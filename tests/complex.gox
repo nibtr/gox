@@ -1,0 +1,119 @@
+// --- higher-order functions & closures ---
+
+func makeAdder(x) {
+  func adder(y) {
+    return x + y;
+  }
+  return adder;
+}
+
+var add5 = makeAdder(5);
+print add5(10); // 15
+
+func makeCounter() {
+  var count = 0;
+  func increment() {
+    count = count + 1;
+    return count;
+  }
+  return increment;
+}
+
+var counterA = makeCounter();
+var counterB = makeCounter();
+print counterA(); // 1
+print counterA(); // 2
+print counterB(); // 1 (independent closure state)
+
+func compose(f, g) {
+  func composed(x) {
+    return f(g(x));
+  }
+  return composed;
+}
+
+func double(x) { return x * 2; }
+func square(x) { return x * x; }
+var doubleThenSquare = compose(square, double);
+print doubleThenSquare(3); // (3*2)^2 = 36
+
+// --- recursion ---
+
+func fib(n) {
+  if (n <= 1) return n;
+  return fib(n - 1) + fib(n - 2);
+}
+
+func isEven(n) {
+  if (n == 0) return true;
+  return isOdd(n - 1);
+}
+
+func isOdd(n) {
+  if (n == 0) return false;
+  return isEven(n - 1);
+}
+
+var i = 0;
+while i < 10 {
+  print fib(i);
+  i = i + 1;
+}
+print isEven(10); // true
+print isOdd(7);   // true
+
+// --- loops with break/continue, nested scopes ---
+
+func sumPrimesBelow(limit) {
+  var total = 0;
+  var n = 2;
+  while n < limit {
+    var isPrime = true;
+    var d = 2;
+    while d * d <= n {
+      if (n / d * d == n) {
+        isPrime = false;
+        break;
+      }
+      d = d + 1;
+    }
+    if (!isPrime) {
+      n = n + 1;
+      continue;
+    }
+    total = total + n;
+    n = n + 1;
+  }
+  return total;
+}
+
+print sumPrimesBelow(50); // 328
+
+// --- ternary + logical short-circuit + string concat ---
+
+func classify(n) {
+  return n < 0 ? "negative" : n == 0 ? "zero" : "positive";
+}
+
+for var k = -1; k <= 1; k = k + 1 {
+  print k;
+  print classify(k);
+}
+
+func expensive() {
+  print "expensive() called";
+  return true;
+}
+
+print false and expensive(); // short-circuits, expensive() never runs
+print true or expensive();   // short-circuits, expensive() never runs
+
+// --- native fn ---
+
+var start = clock();
+var acc = 0;
+for var j = 0; j < 100000; j = j + 1 {
+  acc = acc + j;
+}
+print acc;
+print clock() >= start;
