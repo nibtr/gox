@@ -9,6 +9,7 @@ import (
 
 	"github.com/nibtr/gox/lexer"
 	"github.com/nibtr/gox/parser"
+	"github.com/nibtr/gox/resolver"
 	"github.com/nibtr/gox/runtime"
 )
 
@@ -92,6 +93,14 @@ func run(source string, isRepl bool) error {
 	// fallback to normal program parsing
 	p = parser.NewParser(tokens)
 	statements, err := p.ParseProgram()
+	if err != nil {
+		fmt.Printf("%v\n", err)
+		return err
+	}
+
+	// semantic analysis
+	r := resolver.NewResolver(intrp)
+	err = r.ResolveStmts(statements)
 	if err != nil {
 		fmt.Printf("%v\n", err)
 		return err

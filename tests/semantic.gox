@@ -1,0 +1,16 @@
+var a = "global";
+{
+  func showA() {
+    print a;
+  }
+
+  showA();
+  var a = "block";
+  showA(); // block -> bug
+}
+
+func bad() {
+  var a = "first";
+}
+
+return "s"; // error here
