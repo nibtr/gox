@@ -400,6 +400,15 @@ func (v *Interpreter) VisitBlockStmt(stmt *ast.BlockStmt) error {
 	return v.executeBlock(stmt.Statements, NewEnvironmentWithEnclosing(v.environment))
 }
 
+func (v *Interpreter) VisitClassStmt(stmt *ast.ClassStmt) error {
+	v.environment.define(stmt.Name.Lexeme, nil)
+	class := &Class{Name: stmt.Name.Lexeme}
+	if err := v.environment.assign(stmt.Name, class); err != nil {
+		return err
+	}
+	return nil
+}
+
 // ------------------- Helpers ---------------------
 
 // execute executes a statement

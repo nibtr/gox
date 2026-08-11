@@ -9,6 +9,11 @@ import (
 	"github.com/nibtr/gox/lexer"
 )
 
+const (
+	fnKindFunction = "function"
+	fnKindMethod   = "method"
+)
+
 type parser struct {
 	tokens    []lexer.Token
 	current   uint32
@@ -68,8 +73,10 @@ func (p *parser) declaration() ast.Stmt {
 	var err error
 
 	switch {
+	case p.match(lexer.CLASS):
+		stmt, err = p.classDeclaration()
 	case p.match(lexer.FUNC):
-		stmt, err = p.function("function")
+		stmt, err = p.function(fnKindFunction)
 	case p.match(lexer.VAR):
 		stmt, err = p.varDeclaration()
 	default:
@@ -152,6 +159,40 @@ func (p *parser) varDeclaration() (ast.Stmt, error) {
 	}
 
 	return &ast.VarStmt{Name: *name, Initializer: initializer}, nil
+}
+
+func (p *parser) classDeclaration() (ast.Stmt, error) {
+	name, err := p.consume(lexer.IDENTIFIER, "Expect class name.")
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = p.consume(lexer.LEFT_BRACE, "Expect '{' before class body.")
+	if err != nil {
+		return nil, err
+	}
+
+	methods := []ast.FunctionStmt{}
+	for !p.check(lexer.RIGHT_BRACE) && !p.IsAtEnd() {
+		f, err := p.function(fnKindMethod)
+		if err != nil {
+			return nil, err
+		}
+
+		if val, ok := f.(*ast.FunctionStmt); ok {
+			methods = append(methods, *val)
+		}
+	}
+
+	_, err = p.consume(lexer.RIGHT_BRACE, "Expect '}' after class body.")
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.ClassStmt{
+		Name:    *name,
+		Methods: methods,
+	}, nil
 }
 
 func (p *parser) statement() (ast.Stmt, error) {

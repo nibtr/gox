@@ -41,6 +41,14 @@ func NewResolver(i *runtime.Interpreter) *Resolver {
 	}
 }
 
+// ---------- Statements -----------
+
+func (r *Resolver) VisitClassStmt(stmt *ast.ClassStmt) error {
+	r.declare(&stmt.Name)
+	r.define(&stmt.Name)
+	return nil
+}
+
 func (r *Resolver) VisitBlockStmt(stmt *ast.BlockStmt) error {
 	r.beginScope()
 	defer r.endScope()
@@ -154,6 +162,8 @@ func (r *Resolver) VisitWhileStmt(stmt *ast.WhileStmt) error {
 
 func (r *Resolver) VisitBreakStmt(stmt *ast.BreakStmt) error       { return nil }
 func (r *Resolver) VisitContinueStmt(stmt *ast.ContinueStmt) error { return nil }
+
+// ------------ Expressions ----------------
 
 func (r *Resolver) VisitBinary(expr *ast.Binary) (any, error) {
 	if err := r.resolveExpr(expr.Left); err != nil {

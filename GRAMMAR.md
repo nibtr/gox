@@ -73,9 +73,12 @@ primary    -> NUMBER | STRING | "true" | "false" | "nil"
 ```
 program     -> declaration* EOF ;
 
-declaration -> funcDecl
+declaration -> classDecl
+             | funcDecl
              | varDecl 
              | statement ;
+
+classDecl   -> "class" IDENTIFER "{" function* "}" ;
 
 funcDecl    -> "func" function ;
 function    -> IDENTIFER "(" parameters? ")" block ;

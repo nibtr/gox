@@ -19,6 +19,7 @@ type StmtVisitor interface {
 	VisitPrintStmt(stmt *PrintStmt) error
 	VisitBlockStmt(stmt *BlockStmt) error
 	VisitVarStmt(stmt *VarStmt) error
+	VisitClassStmt(stmt *ClassStmt) error
 }
 
 type FunctionStmt struct {
@@ -67,6 +68,11 @@ type VarStmt struct {
 	Initializer Expr
 }
 
+type ClassStmt struct {
+	Name    lexer.Token
+	Methods []FunctionStmt
+}
+
 func (s *FunctionStmt) Accept(v StmtVisitor) error {
 	return v.VisitFunctionStmt(s)
 }
@@ -105,4 +111,8 @@ func (s *BlockStmt) Accept(v StmtVisitor) error {
 
 func (s *VarStmt) Accept(v StmtVisitor) error {
 	return v.VisitVarStmt(s)
+}
+
+func (s *ClassStmt) Accept(v StmtVisitor) error {
+	return v.VisitClassStmt(s)
 }
