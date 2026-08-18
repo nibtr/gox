@@ -233,6 +233,11 @@ func (r *Resolver) VisitTernary(expr *ast.Ternary) (any, error) {
 	return nil, nil
 }
 
+func (r *Resolver) VisitGetExpr(n *ast.GetExpr) (any, error) {
+	r.resolveExpr(n.Object)
+	return nil, nil
+}
+
 // ------- Helpers ---------
 
 func (r *Resolver) ResolveStmts(stmts []ast.Stmt) error {

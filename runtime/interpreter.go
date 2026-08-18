@@ -291,6 +291,21 @@ func (v *Interpreter) VisitVariable(expr *ast.Variable) (any, error) {
 	return v.lookUpVariable(&expr.Name, expr)
 }
 
+func (v *Interpreter) VisitGetExpr(expr *ast.GetExpr) (any, error) {
+	object, err := v.evaluate(expr.Object)
+	if err != nil {
+		return nil, err
+	}
+	if v, ok := object.(ClassInstance); ok {
+		return v.Get(expr.Name)
+	}
+
+	return nil, &RuntimeError{
+		Token:   &expr.Name,
+		Message: "Only instances have properties.",
+	}
+}
+
 // ----------- Statement section -------------------
 
 func (v *Interpreter) VisitVarStmt(stmt *ast.VarStmt) error {

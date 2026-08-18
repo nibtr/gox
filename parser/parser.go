@@ -673,6 +673,13 @@ func (p *parser) call() (ast.Expr, error) {
 			if err != nil {
 				return nil, err
 			}
+		} else if p.match(lexer.DOT) {
+			name, err := p.consume(lexer.IDENTIFIER, "Expect property name after '.'.")
+			if err != nil {
+				return nil, err
+			}
+			expr = &ast.GetExpr{Object: expr, Name: *name}
+			break
 		} else {
 			break
 		}
