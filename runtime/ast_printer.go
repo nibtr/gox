@@ -9,6 +9,11 @@ import (
 
 type astPrinter struct{}
 
+// VisitGetExpr implements [ast.ExprVisitor].
+func (v astPrinter) VisitGetExpr(n *ast.GetExpr) (any, error) {
+	return v.parenthesize("get "+n.Name.Lexeme, n.Object)
+}
+
 func (v astPrinter) Print(e ast.Expr) (string, error) {
 	res, err := e.Accept(v)
 	if err != nil {
