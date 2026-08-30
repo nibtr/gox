@@ -464,6 +464,14 @@ func (p *parser) assignment() (ast.Expr, error) {
 			name := v.Name
 			return &ast.Assign{Name: name, Value: value}, nil
 		}
+		if v, ok := expr.(*ast.GetExpr); ok {
+			get := v
+			return &ast.SetExpr{
+				Object: get.Object,
+				Name:   get.Name,
+				Value:  value,
+			}, nil
+		}
 
 		p.error(equals, "invalid assignment target.")
 	}

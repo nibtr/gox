@@ -42,3 +42,7 @@ func (ci *ClassInstance) Get(name lexer.Token) (any, error) {
 		Message: fmt.Sprintf("Undefined property '%v'.", name.Lexeme),
 	}
 }
+
+func (ci *ClassInstance) Set(name lexer.Token, value any) {
+	ci.fields[name.Lexeme] = value
+}

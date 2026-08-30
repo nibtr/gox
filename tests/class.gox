@@ -5,4 +5,6 @@ class DevonshireCream {
 }
 
 var i = DevonshireCream();
-print i;
+i.a = 4;
+i.b = 6;
+print i.a + i.b;

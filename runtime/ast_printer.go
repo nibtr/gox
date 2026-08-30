@@ -14,6 +14,10 @@ func (v astPrinter) VisitGetExpr(n *ast.GetExpr) (any, error) {
 	return v.parenthesize("get "+n.Name.Lexeme, n.Object)
 }
 
+func (v astPrinter) VisitSetExpr(n *ast.SetExpr) (any, error) {
+	return v.parenthesize("set "+n.Name.Lexeme, n.Object)
+}
+
 func (v astPrinter) Print(e ast.Expr) (string, error) {
 	res, err := e.Accept(v)
 	if err != nil {

@@ -296,7 +296,7 @@ func (v *Interpreter) VisitGetExpr(expr *ast.GetExpr) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	if v, ok := object.(ClassInstance); ok {
+	if v, ok := object.(*ClassInstance); ok {
 		return v.Get(expr.Name)
 	}
 
@@ -304,6 +304,29 @@ func (v *Interpreter) VisitGetExpr(expr *ast.GetExpr) (any, error) {
 		Token:   &expr.Name,
 		Message: "Only instances have properties.",
 	}
+}
+
+func (v *Interpreter) VisitSetExpr(expr *ast.SetExpr) (any, error) {
+	object, err := v.evaluate(expr.Object)
+	if err != nil {
+		return nil, err
+	}
+
+	instance, ok := object.(*ClassInstance)
+	if !ok {
+		return nil, &RuntimeError{
+			Token:   &expr.Name,
+			Message: "Only instances have fields.",
+		}
+	}
+
+	value, err := v.evaluate(expr.Value)
+	if err != nil {
+		return nil, err
+	}
+
+	instance.Set(expr.Name, value)
+	return value, nil
 }
 
 // ----------- Statement section -------------------

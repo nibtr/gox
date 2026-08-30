@@ -238,6 +238,12 @@ func (r *Resolver) VisitGetExpr(n *ast.GetExpr) (any, error) {
 	return nil, nil
 }
 
+func (r *Resolver) VisitSetExpr(n *ast.SetExpr) (any, error) {
+	r.resolveExpr(n.Value)
+	r.resolveExpr(n.Object)
+	return nil, nil
+}
+
 // ------- Helpers ---------
 
 func (r *Resolver) ResolveStmts(stmts []ast.Stmt) error {

@@ -46,7 +46,7 @@ any string literal.
 ```
 expression -> assignment ;
 
-assignment -> IDENTIFIER "=" assignment
+assignment -> (call ".")? IDENTIFIER "=" assignment
               | ternary ;
 
 ternary    -> logic_or
