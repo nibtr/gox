@@ -7,7 +7,8 @@ import (
 )
 
 type Class struct {
-	Name string
+	Name    string
+	Methods map[string]*Function
 }
 
 func (f *Class) String() string {
@@ -15,7 +16,7 @@ func (f *Class) String() string {
 }
 
 func (f *Class) Call(i *Interpreter, args []any) (any, error) {
-	instance := &ClassInstance{klass: f, fields: make(map[string]any)}
+	instance := &ClassInstance{Klass: f, Fields: make(map[string]any)}
 	return instance, nil
 }
 
@@ -23,18 +24,30 @@ func (f *Class) Arity() int {
 	return 0
 }
 
+func (f *Class) findMethod(name string) *Function {
+	if v, ok := f.Methods[name]; ok {
+		return v
+	}
+	return nil
+}
+
 type ClassInstance struct {
-	klass  *Class
-	fields map[string]any
+	Klass  *Class
+	Fields map[string]any
 }
 
 func (ci *ClassInstance) String() string {
-	return fmt.Sprintf("%v instance", ci.klass.Name)
+	return fmt.Sprintf("%v instance", ci.Klass.Name)
 }
 
 func (ci *ClassInstance) Get(name lexer.Token) (any, error) {
-	if v, ok := ci.fields[name.Lexeme]; ok {
+	if v, ok := ci.Fields[name.Lexeme]; ok {
 		return v, nil
+	}
+
+	method := ci.Klass.findMethod(name.Lexeme)
+	if method != nil {
+		return method, nil
 	}
 
 	return nil, &RuntimeError{
@@ -44,5 +57,5 @@ func (ci *ClassInstance) Get(name lexer.Token) (any, error) {
 }
 
 func (ci *ClassInstance) Set(name lexer.Token, value any) {
-	ci.fields[name.Lexeme] = value
+	ci.Fields[name.Lexeme] = value
 }

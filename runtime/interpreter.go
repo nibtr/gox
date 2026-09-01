@@ -440,7 +440,17 @@ func (v *Interpreter) VisitBlockStmt(stmt *ast.BlockStmt) error {
 
 func (v *Interpreter) VisitClassStmt(stmt *ast.ClassStmt) error {
 	v.environment.define(stmt.Name.Lexeme, nil)
-	class := &Class{Name: stmt.Name.Lexeme}
+	methods := make(map[string]*Function)
+
+	for _, method := range stmt.Methods {
+		fn := &Function{
+			declaration: &method,
+			closure:     v.environment,
+		}
+		methods[method.Name.Lexeme] = fn
+	}
+
+	class := &Class{Name: stmt.Name.Lexeme, Methods: methods}
 	if err := v.environment.assign(stmt.Name, class); err != nil {
 		return err
 	}

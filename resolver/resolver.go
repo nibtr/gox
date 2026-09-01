@@ -14,6 +14,7 @@ type FunctionType int
 const (
 	None FunctionType = iota
 	Function
+	Method
 )
 
 // Resolver is a struct that performs sematic-analysis in a new
@@ -46,6 +47,10 @@ func NewResolver(i *runtime.Interpreter) *Resolver {
 func (r *Resolver) VisitClassStmt(stmt *ast.ClassStmt) error {
 	r.declare(&stmt.Name)
 	r.define(&stmt.Name)
+	for _, method := range stmt.Methods {
+		decl := Method
+		r.resolveFunction(&method, decl)
+	}
 	return nil
 }
 
