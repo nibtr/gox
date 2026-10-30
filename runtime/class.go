@@ -11,12 +11,19 @@ type Class struct {
 	Methods map[string]*Function
 }
 
+func NewClass(name string, methods map[string]*Function) *Class {
+	return &Class{
+		Name:    name,
+		Methods: methods,
+	}
+}
+
 func (f *Class) String() string {
 	return f.Name
 }
 
 func (f *Class) Call(i *Interpreter, args []any) (any, error) {
-	instance := &ClassInstance{Klass: f, Fields: make(map[string]any)}
+	instance := NewClassInstance(f, make(map[string]any))
 	return instance, nil
 }
 
@@ -34,6 +41,13 @@ func (f *Class) findMethod(name string) *Function {
 type ClassInstance struct {
 	Klass  *Class
 	Fields map[string]any
+}
+
+func NewClassInstance(klass *Class, fields map[string]any) *ClassInstance {
+	return &ClassInstance{
+		Klass:  klass,
+		Fields: fields,
+	}
 }
 
 func (ci *ClassInstance) String() string {

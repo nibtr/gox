@@ -450,7 +450,7 @@ func (v *Interpreter) VisitClassStmt(stmt *ast.ClassStmt) error {
 		methods[method.Name.Lexeme] = fn
 	}
 
-	class := &Class{Name: stmt.Name.Lexeme, Methods: methods}
+	class := NewClass(stmt.Name.Lexeme, methods)
 	if err := v.environment.assign(stmt.Name, class); err != nil {
 		return err
 	}
