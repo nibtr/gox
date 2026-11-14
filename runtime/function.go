@@ -52,6 +52,15 @@ func (f *Function) Arity() int {
 	return len(f.declaration.Params)
 }
 
+func (f *Function) Bind(instance *ClassInstance) *Function {
+	env := NewEnvironmentWithEnclosing(f.closure)
+	env.define("this", instance)
+	return &Function{
+		declaration: f.declaration,
+		closure:     env,
+	}
+}
+
 func (f *Function) String() string {
 	return fmt.Sprintf("<fn %s>", f.declaration.Name.Lexeme)
 }

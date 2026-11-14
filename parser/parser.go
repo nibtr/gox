@@ -709,6 +709,10 @@ func (p *parser) primary() (ast.Expr, error) {
 		t := p.previous()
 		return &ast.Literal{Value: t.Literal}, nil
 	}
+	if p.match(lexer.THIS) {
+		t := p.previous()
+		return &ast.ThisExpr{Keyword: *t}, nil
+	}
 	if p.match(lexer.IDENTIFIER) {
 		return &ast.Variable{Name: *p.previous()}, nil
 	}

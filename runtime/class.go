@@ -61,7 +61,7 @@ func (ci *ClassInstance) Get(name lexer.Token) (any, error) {
 
 	method := ci.Klass.findMethod(name.Lexeme)
 	if method != nil {
-		return method, nil
+		return method.Bind(ci), nil
 	}
 
 	return nil, &RuntimeError{

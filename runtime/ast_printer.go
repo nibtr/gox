@@ -18,6 +18,10 @@ func (v astPrinter) VisitSetExpr(n *ast.SetExpr) (any, error) {
 	return v.parenthesize("set "+n.Name.Lexeme, n.Object)
 }
 
+func (v astPrinter) VisitThisExpr(n *ast.ThisExpr) (any, error) {
+	return v.parenthesize("this " + n.Keyword.Lexeme)
+}
+
 func (v astPrinter) Print(e ast.Expr) (string, error) {
 	res, err := e.Accept(v)
 	if err != nil {

@@ -34,6 +34,24 @@ type Resolver struct {
 // whether or not we have finished resolving that variable’s initializer
 type scope map[string]bool
 
+// peek returns the innermost scope. ok is false when s is empty
+// (i.e. we are at global scope).
+func peek(s []scope) (sc scope, ok bool) {
+	if len(s) == 0 {
+		return nil, false
+	}
+	return s[len(s)-1], true
+}
+
+// pop returns s without its innermost scope. Popping an empty
+// stack is a no-op and returns s unchanged.
+func pop(s []scope) []scope {
+	if len(s) == 0 {
+		return s
+	}
+	return s[:len(s)-1]
+}
+
 func NewResolver(i *runtime.Interpreter) *Resolver {
 	return &Resolver{
 		Interpreter:     i,
@@ -47,10 +65,19 @@ func NewResolver(i *runtime.Interpreter) *Resolver {
 func (r *Resolver) VisitClassStmt(stmt *ast.ClassStmt) error {
 	r.declare(&stmt.Name)
 	r.define(&stmt.Name)
+
+	r.beginScope()
+	if sc, ok := peek(r.Scopes); ok {
+		sc["this"] = true
+	}
+
 	for _, method := range stmt.Methods {
 		decl := Method
 		r.resolveFunction(&method, decl)
 	}
+
+	r.endScope()
+
 	return nil
 }
 
@@ -74,8 +101,8 @@ func (r *Resolver) VisitVarStmt(stmt *ast.VarStmt) error {
 }
 
 func (r *Resolver) VisitVariable(expr *ast.Variable) (any, error) {
-	if len(r.Scopes) != 0 {
-		if defined, ok := r.Scopes[len(r.Scopes)-1][expr.Name.Lexeme]; ok && !defined {
+	if sc, ok := peek(r.Scopes); ok {
+		if defined, declared := sc[expr.Name.Lexeme]; declared && !defined {
 			return nil, &parser.ParseError{
 				Token:   &expr.Name,
 				Message: "Can't read local variable in its own initializer.",
@@ -249,6 +276,11 @@ func (r *Resolver) VisitSetExpr(n *ast.SetExpr) (any, error) {
 	return nil, nil
 }
 
+func (r *Resolver) VisitThisExpr(n *ast.ThisExpr) (any, error) {
+	r.resolveLocal(n, &n.Keyword)
+	return nil, nil
+}
+
 // ------- Helpers ---------
 
 func (r *Resolver) ResolveStmts(stmts []ast.Stmt) error {
@@ -274,16 +306,16 @@ func (r *Resolver) beginScope() {
 }
 
 func (r *Resolver) endScope() {
-	r.Scopes = r.Scopes[:len(r.Scopes)-1] // pop
+	r.Scopes = pop(r.Scopes)
 }
 
 func (r *Resolver) declare(name *lexer.Token) error {
-	if len(r.Scopes) == 0 {
+	scope, ok := peek(r.Scopes)
+	if !ok {
 		return nil
 	}
 
-	scope := r.Scopes[len(r.Scopes)-1] // peek
-	if _, ok := scope[name.Lexeme]; ok {
+	if _, exists := scope[name.Lexeme]; exists {
 		return &parser.ParseError{
 			Token:   name,
 			Message: "Already variable with this name in this scope.",
@@ -295,11 +327,12 @@ func (r *Resolver) declare(name *lexer.Token) error {
 }
 
 func (r *Resolver) define(name *lexer.Token) {
-	if len(r.Scopes) == 0 {
+	scope, ok := peek(r.Scopes)
+	if !ok {
 		return
 	}
 
-	r.Scopes[len(r.Scopes)-1][name.Lexeme] = true
+	scope[name.Lexeme] = true
 }
 
 func (r *Resolver) resolveLocal(expr ast.Expr, name *lexer.Token) {

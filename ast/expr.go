@@ -29,6 +29,8 @@ type ExprVisitor interface {
 	VisitGetExpr(n *GetExpr) (any, error)
 	// VisitSetExpr evaluates an expression and assign to property
 	VisitSetExpr(n *SetExpr) (any, error)
+	// VisitThisExpr evaluates a this expression
+	VisitThisExpr(n *ThisExpr) (any, error)
 }
 
 type Expr interface {
@@ -92,6 +94,10 @@ type SetExpr struct {
 	Value  Expr
 }
 
+type ThisExpr struct {
+	Keyword lexer.Token
+}
+
 func (n *Assign) Accept(v ExprVisitor) (any, error) {
 	return v.VisitAssignExpr(n)
 }
@@ -134,4 +140,8 @@ func (n *GetExpr) Accept(v ExprVisitor) (any, error) {
 
 func (n *SetExpr) Accept(v ExprVisitor) (any, error) {
 	return v.VisitSetExpr(n)
+}
+
+func (n *ThisExpr) Accept(v ExprVisitor) (any, error) {
+	return v.VisitThisExpr(n)
 }

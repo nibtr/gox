@@ -329,6 +329,10 @@ func (v *Interpreter) VisitSetExpr(expr *ast.SetExpr) (any, error) {
 	return value, nil
 }
 
+func (v *Interpreter) VisitThisExpr(expr *ast.ThisExpr) (any, error) {
+	return v.lookUpVariable(&expr.Keyword, expr)
+}
+
 // ----------- Statement section -------------------
 
 func (v *Interpreter) VisitVarStmt(stmt *ast.VarStmt) error {
