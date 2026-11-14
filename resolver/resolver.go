@@ -10,11 +10,17 @@ import (
 )
 
 type FunctionType int
+type ClassType int
 
 const (
-	None FunctionType = iota
-	Function
-	Method
+	FunctionTypeNone FunctionType = iota
+	FunctionTypeFunction
+	FunctionTypeMethod
+)
+
+const (
+	ClassTypeNone ClassType = iota
+	ClassTypeClass
 )
 
 // Resolver is a struct that performs sematic-analysis in a new
@@ -27,6 +33,7 @@ type Resolver struct {
 	// The scope stack used for local block scopes.
 	Scopes          []scope
 	CurrentFunction FunctionType
+	CurrentClass    ClassType
 }
 
 // scope behaves like a linked list - the chain of Environment objects.
@@ -56,13 +63,16 @@ func NewResolver(i *runtime.Interpreter) *Resolver {
 	return &Resolver{
 		Interpreter:     i,
 		Scopes:          make([]scope, 0),
-		CurrentFunction: None,
+		CurrentFunction: FunctionTypeNone,
 	}
 }
 
 // ---------- Statements -----------
 
 func (r *Resolver) VisitClassStmt(stmt *ast.ClassStmt) error {
+	enclosingClass := r.CurrentClass
+	r.CurrentClass = ClassTypeClass
+
 	r.declare(&stmt.Name)
 	r.define(&stmt.Name)
 
@@ -72,11 +82,12 @@ func (r *Resolver) VisitClassStmt(stmt *ast.ClassStmt) error {
 	}
 
 	for _, method := range stmt.Methods {
-		decl := Method
+		decl := FunctionTypeMethod
 		r.resolveFunction(&method, decl)
 	}
 
 	r.endScope()
+	r.CurrentClass = enclosingClass
 
 	return nil
 }
@@ -128,7 +139,7 @@ func (r *Resolver) VisitFunctionStmt(stmt *ast.FunctionStmt) error {
 		return err
 	}
 	r.define(&stmt.Name)
-	if err := r.resolveFunction(stmt, Function); err != nil {
+	if err := r.resolveFunction(stmt, FunctionTypeFunction); err != nil {
 		return err
 	}
 	return nil
@@ -161,7 +172,7 @@ func (r *Resolver) VisitPrintStmt(stmt *ast.PrintStmt) error {
 }
 
 func (r *Resolver) VisitReturnStmt(stmt *ast.ReturnStmt) error {
-	if r.CurrentFunction == None {
+	if r.CurrentFunction == FunctionTypeNone {
 		return &parser.ParseError{
 			Token:   &stmt.Keyword,
 			Message: "Can't return from top-level code.",
@@ -277,6 +288,12 @@ func (r *Resolver) VisitSetExpr(n *ast.SetExpr) (any, error) {
 }
 
 func (r *Resolver) VisitThisExpr(n *ast.ThisExpr) (any, error) {
+	if r.CurrentClass == ClassTypeNone {
+		return nil, &runtime.RuntimeError{
+			Token:   &n.Keyword,
+			Message: "Cannot use 'this' outside of a class",
+		}
+	}
 	r.resolveLocal(n, &n.Keyword)
 	return nil, nil
 }
