@@ -687,7 +687,6 @@ func (p *parser) call() (ast.Expr, error) {
 				return nil, err
 			}
 			expr = &ast.GetExpr{Object: expr, Name: *name}
-			break
 		} else {
 			break
 		}

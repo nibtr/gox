@@ -1,19 +1,9 @@
-class DevonshireCream {
-  serveOn() {
-    return "Scones";
-  }
-}
-
-var i = DevonshireCream();
-i.a = 4;
-i.b = 6;
-print i.a + i.b;
-
 class Bacon {
   eat() {
     print "Crunch crunch crunch!";
   }
 }
 
-var a = Bacon().eat;
-a();
+// var a = Bacon().eat;
+// a();
+Bacon().eat();
